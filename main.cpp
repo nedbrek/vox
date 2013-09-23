@@ -1,6 +1,26 @@
 #include <GL/glfw.h>
 #include <cstdio>
 
+void drawScene()
+{
+	glBegin(GL_QUADS);
+	glColor3d(1, 0, 0);
+
+	// bottom
+	glVertex3d(0, 0, 0);
+	glVertex3d(1, 0, 0);
+	glVertex3d(1, 1, 0);
+	glVertex3d(0, 1, 0);
+
+	// top
+	glVertex3d(0, 0, 1);
+	glVertex3d(1, 0, 1);
+	glVertex3d(1, 1, 1);
+	glVertex3d(0, 1, 1);
+
+	glEnd();
+}
+
 int main(int argc, char **argv)
 {
 	// initialize GLFW
@@ -25,6 +45,8 @@ int main(int argc, char **argv)
 	{
 		// clear screen
 		glClear(GL_COLOR_BUFFER_BIT);
+
+		drawScene();
 
 		// swap double buffers
 		glfwSwapBuffers();
