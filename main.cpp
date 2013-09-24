@@ -4,6 +4,54 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <cstdio>
 
+// wrapper for matrix operations related to the view
+class Camera
+{
+public:
+	Camera()
+	: x_(-1)
+	, y_(-1)
+	, z_(2)
+	, tX_(0)
+	, tY_(0)
+	, tZ_(0)
+	, headRay_(1)
+	, fov_(90)
+	, aspectRatio_(16./9)
+	, nearClipPlane_(.1)
+	, farClipPlane_(100)
+	{
+	}
+
+	glm::mat4 projection()
+	{
+		return glm::perspective(fov_, aspectRatio_,
+		  nearClipPlane_, farClipPlane_);
+	}
+
+	glm::mat4 view()
+	{
+		return glm::lookAt(
+		  glm::vec3(x_, y_, z_), // eye position
+		  glm::vec3(tX_, tY_, tZ_), // target xyz
+		  glm::vec3(0, headRay_, 0) // head tilt
+		);
+	}
+
+protected:
+	// pointing angle
+	float x_, y_, z_; // position
+	float tX_, tY_, tZ_; // target position
+
+	float headRay_; // 1 is up, -1 is down
+
+	// projection state
+	float fov_; // field of view
+
+	float aspectRatio_;
+	float nearClipPlane_, farClipPlane_;
+};
+
 void drawScene()
 {
 	glBegin(GL_QUADS);
@@ -43,15 +91,9 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	glm::mat4 projection = glm::perspective(90.f, 16.f/9.f, .1f, 100.f);
-	glm::mat4 view = glm::lookAt(
-	  glm::vec3(-1, -1, 2), // eye position
-	  glm::vec3(0, 0, 0), // target xyz
-	  glm::vec3(0, 1, 0) // head up (-1 for inverted)
-	);
-
-	glLoadMatrixf(glm::value_ptr(projection));
-	glMultMatrixf(glm::value_ptr(view));
+	Camera c;
+	glLoadMatrixf(glm::value_ptr(c.projection()));
+	glMultMatrixf(glm::value_ptr(c.view()));
 
 	bool running = true;
 	while (running)
