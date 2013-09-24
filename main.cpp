@@ -1,4 +1,7 @@
 #include <GL/glfw.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <cstdio>
 
 void drawScene()
@@ -39,6 +42,16 @@ int main(int argc, char **argv)
 		glfwTerminate();
 		return 1;
 	}
+
+	glm::mat4 projection = glm::perspective(90.f, 16.f/9.f, .1f, 100.f);
+	glm::mat4 view = glm::lookAt(
+	  glm::vec3(-1, -1, 2), // eye position
+	  glm::vec3(0, 0, 0), // target xyz
+	  glm::vec3(0, 1, 0) // head up (-1 for inverted)
+	);
+
+	glLoadMatrixf(glm::value_ptr(projection));
+	glMultMatrixf(glm::value_ptr(view));
 
 	bool running = true;
 	while (running)
