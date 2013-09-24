@@ -4,6 +4,12 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <cstdio>
 
+namespace
+{
+	const float mouseSpeed = 0.005;
+	const float speed = 3; // units per second
+}
+
 // wrapper for matrix operations related to the view
 class Camera
 {
@@ -15,7 +21,7 @@ public:
 	, tX_(0)
 	, tY_(0)
 	, tZ_(0)
-	, headRay_(1)
+	, headVec_(0, 1, 0)
 	, fov_(90)
 	, aspectRatio_(16./9)
 	, nearClipPlane_(.1)
@@ -23,19 +29,43 @@ public:
 	{
 	}
 
-	glm::mat4 projection()
+	glm::mat4 projection() const
 	{
 		return glm::perspective(fov_, aspectRatio_,
 		  nearClipPlane_, farClipPlane_);
 	}
 
-	glm::mat4 view()
+	glm::mat4 view() const
 	{
 		return glm::lookAt(
-		  glm::vec3(x_, y_, z_), // eye position
+		  position(),
 		  glm::vec3(tX_, tY_, tZ_), // target xyz
-		  glm::vec3(0, headRay_, 0) // head tilt
+		  headVec_
 		);
+	}
+
+	glm::vec3 position() const
+	{
+		return glm::vec3(x_, y_, z_);
+	}
+
+	void setPosition(const glm::vec3 &pos)
+	{
+		x_ = pos[0];
+		y_ = pos[1];
+		z_ = pos[2];
+	}
+
+	void setTargetPosition(const glm::vec3 &v)
+	{
+		tX_ = v[0];
+		tY_ = v[1];
+		tZ_ = v[2];
+	}
+
+	void setHeadVec(const glm::vec3 &v)
+	{
+		headVec_ = v;
 	}
 
 protected:
@@ -43,13 +73,96 @@ protected:
 	float x_, y_, z_; // position
 	float tX_, tY_, tZ_; // target position
 
-	float headRay_; // 1 is up, -1 is down
+	glm::vec3 headVec_; // head tilt
 
 	// projection state
 	float fov_; // field of view
 
 	float aspectRatio_;
 	float nearClipPlane_, farClipPlane_;
+};
+
+class Controls
+{
+public:
+	Controls()
+	: lastTime_(glfwGetTime())
+	, windowWidth_(1092)
+	, windowHeight_(614)
+	{
+		glfwDisable(GLFW_MOUSE_CURSOR);
+	}
+
+	void beginFrame(Camera *cp)
+	{
+		const double curTime = glfwGetTime();
+		const double deltaT = curTime - lastTime_;
+
+		// find amount of mouse motion since last frame
+		int mouseX, mouseY;
+		glfwGetMousePos(&mouseX, &mouseY);
+
+		// compute new orientation
+		const float deltaX = float(windowWidth_/2 - mouseX);
+		const float deltaY = float(windowHeight_/2 - mouseY);
+
+		const float horizontalAngle = 3.14f + mouseSpeed * deltaX;
+		const float verticalAngle   = mouseSpeed * deltaY;
+
+		// direction : spherical to cartesian coordinate conversion
+		const glm::vec3 direction(
+		  cos(verticalAngle) * sin(horizontalAngle),
+		  sin(verticalAngle),
+		  cos(verticalAngle) * cos(horizontalAngle)
+		);
+
+		// Right vector
+		const glm::vec3 right = glm::vec3(
+		  sin(horizontalAngle - 3.14f/2.0f),
+		  0,
+		  cos(horizontalAngle - 3.14f/2.0f)
+		);
+
+		// Up vector
+		const glm::vec3 up = glm::cross(right, direction);
+
+		glm::vec3 position = cp->position();
+		// update position
+		if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
+		{
+			position[1] += deltaT * speed;
+		}
+		if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
+		{
+			position[1] -= deltaT * speed;
+		}
+		if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
+		{
+			position[0] += deltaT * speed;
+		}
+		if (glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS)
+		{
+			position[0] -= deltaT * speed;
+		}
+		if (glfwGetKey(GLFW_KEY_PAGEUP) == GLFW_PRESS)
+		{
+			position[2] += deltaT * speed;
+		}
+		if (glfwGetKey(GLFW_KEY_PAGEDOWN) == GLFW_PRESS)
+		{
+			position[2] -= deltaT * speed;
+		}
+
+		cp->setPosition(position);
+		cp->setTargetPosition(position + direction);
+		cp->setHeadVec(up);
+
+		lastTime_ = curTime;
+	}
+
+protected:
+	double lastTime_;
+	int windowWidth_, windowHeight_;
 };
 
 void drawScene()
@@ -91,13 +204,20 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	Camera c;
-	glLoadMatrixf(glm::value_ptr(c.projection()));
-	glMultMatrixf(glm::value_ptr(c.view()));
+	Camera camera;
+	// track key down events until we get around to them
+	glfwEnable(GLFW_STICKY_KEYS);
 
+	Controls ctl;
 	bool running = true;
 	while (running)
 	{
+		ctl.beginFrame(&camera);
+
+		// build MVP matrix
+		glLoadMatrixf(glm::value_ptr(camera.projection()));
+		glMultMatrixf(glm::value_ptr(camera.view()));
+
 		// clear screen
 		glClear(GL_COLOR_BUFFER_BIT);
 
