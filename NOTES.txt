@@ -1,0 +1,29 @@
+---Main objectives
+1B blocks (1000 cubed)
+256 textures
+6 quads per block (use strip + end caps?)
+~1M pixels (1024x768)
+~30 fps
+
+---Chunking
+16 cubed = 4k blocks
+4KB for texture indexes
+1,572,864 B = 4k blocks * 6 quads * 4 vertexes * 4 floats * 4 B/float
+
+By chunks: [-31, 31] xyz (63 chunks per) = 250,047 chunks
+= 1,024,192,512 B
+
+Super chunks?
+
+LOD? Render chunk to texture?
+
+http://www.opengl.org/wiki_132/index.php/Vertex_Rendering#Instancing
+"It is often useful to be able to render multiple copies of the same mesh in
+different locations. If you're doing this with small numbers, like 5-20 or so,
+multiple draw commands with shader uniform changes between them (to tell which
+is in which location) is reasonably fast in performance. However, if you're
+doing this with large numbers of meshes, like 5,000+ or so, then it can be a
+performance problem."
+
+Might require OpenGL 3
+
