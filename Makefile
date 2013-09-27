@@ -1,3 +1,3 @@
 all:
-	@g++ -Wall main.cpp -lglfw
+	@g++ -Wall main.cpp -lglfw -lGLEW
 

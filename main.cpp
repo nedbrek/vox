@@ -1,13 +1,91 @@
+#include <GL/glew.h>
 #include <GL/glfw.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <cstdio>
+#include <fstream>
+#include <iostream>
+#include <memory>
 
 namespace
 {
 	const float mouseSpeed = 0.005;
 	const float speed = 3; // units per second
+
+	void makeColorTexture(unsigned char *buf, unsigned numPixels)
+	{
+		assert(numPixels % 4 == 0);
+		for(unsigned i = 0; i < numPixels; ++i)
+		{
+			buf[i] =   0; ++i; // red
+			buf[i] = 250; ++i; // green
+			buf[i] =   0; ++i; // blue
+			buf[i] = 127; // alpha
+		}
+	}
+
+	GLuint makeShaderProgram()
+	{
+		// allocate program resource
+		GLuint fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
+
+		// pull in program source code
+		const char *const fragFilename = "textureFrag.glsl";
+		std::ifstream fragFile(fragFilename);
+		if (!fragFile.is_open())
+		{
+			std::cerr << "Unable to open fragment shader " << fragFilename
+			  << '.' << std::endl;
+			return 0; // invalid id
+		}
+
+		std::string fileString;
+		std::string line;
+		while (std::getline(fragFile, line))
+		{
+			fileString += line;
+			fileString += '\n';
+		}
+
+		// compile it
+		const char *fragSource = fileString.c_str();
+		glShaderSource(fragmentShaderId, 1, &fragSource, NULL);
+		glCompileShader(fragmentShaderId);
+
+		// check results
+		GLint result = GL_FALSE;
+		glGetShaderiv(fragmentShaderId, GL_COMPILE_STATUS, &result);
+		if (result != GL_TRUE)
+		{
+			int infoLogLength = 0;
+			glGetShaderiv(fragmentShaderId, GL_INFO_LOG_LENGTH, &infoLogLength);
+
+			std::string infoLog(infoLogLength+1, 0);
+			glGetShaderInfoLog(fragmentShaderId, infoLogLength, NULL, &infoLog[0]);
+			std::cerr << "Fragment compilation failed." << std::endl
+			  << infoLog.c_str() << std::endl;
+			return 0; // invalid id
+		}
+
+		// link the program
+		GLuint programId = glCreateProgram();
+		glAttachShader(programId, fragmentShaderId);
+		glLinkProgram(programId);
+
+		// check results
+		glGetProgramiv(programId, GL_LINK_STATUS, &result);
+		if (result != GL_TRUE)
+		{
+			int infoLogLength = 0;
+			glGetProgramiv(programId, GL_INFO_LOG_LENGTH, &infoLogLength);
+			std::cerr << "Shader Program link failed." << std::endl;
+			return 0; // invalid id
+		}
+
+		glDeleteShader(fragmentShaderId);
+		return programId;
+	}
 }
 
 // wrapper for matrix operations related to the view
@@ -168,7 +246,6 @@ protected:
 void drawScene()
 {
 	glBegin(GL_QUADS);
-	glColor3d(1, 0, 0);
 
 	// bottom
 	glVertex3d(0, 0, 0);
@@ -204,9 +281,43 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+	if (glewInit() != GLEW_OK) // must be after OpenGL context
+	{
+		std::cerr << "Failed to initialize GLEW." << std::endl;
+		return 1;
+	}
+
+	GLuint shaderProgram = makeShaderProgram();
+
+	// create texture
+	// 1k pix, 4 B per pix
+	std::auto_ptr<unsigned char> textureBuf(new unsigned char[1024*4]);
+	makeColorTexture(textureBuf.get(), 1024*4);
+
+	// send it to OpenGL
+	GLuint textureId = 0; // invalid
+	glGenTextures(1, &textureId);
+	glBindTexture(GL_TEXTURE_2D, textureId);
+
+	// our texture is 32 by 32 unnormalized integer RGBA data
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 32, 32, 0, GL_RGBA,
+	  GL_UNSIGNED_BYTE, textureBuf.get());
+	GLenum err = glGetError();
+	if (err != GL_NO_ERROR)
+	{
+		std::cerr << "Error creating texture." << std::endl;
+		return 1;
+	}
+
 	Camera camera;
 	// track key down events until we get around to them
 	glfwEnable(GLFW_STICKY_KEYS);
+
+	glUseProgram(shaderProgram);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, textureId);
 
 	Controls ctl;
 	bool running = true;
