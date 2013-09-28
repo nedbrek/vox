@@ -1,3 +1,3 @@
 all:
-	@g++ -Wall main.cpp -lglfw -lGLEW
+	@g++ -Wall main.cpp pngLoad.cpp -lglfw -lGLEW -lpng
 

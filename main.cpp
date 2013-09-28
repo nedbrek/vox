@@ -8,6 +8,9 @@
 #include <iostream>
 #include <memory>
 
+unsigned char* loadPngTexture(const char *filename, int *width, int *height,
+  bool *hasAlpha);
+
 namespace
 {
 	const float mouseSpeed = 0.005;
@@ -342,7 +345,14 @@ int main(int argc, char **argv)
 
 	// create texture
 	// 1k pix, 4 B per pix
-	std::auto_ptr<unsigned char> textureBuf(makeColorTexture(32*32*4));
+	//std::auto_ptr<unsigned char> textureBuf(makeColorTexture(32*32*4));
+	int width = 0, height = 0;
+	bool hasAlpha = false;
+	std::auto_ptr<unsigned char> textureBuf(
+	  loadPngTexture("textures/blocks/stone.png",
+	    &width, &height, &hasAlpha)
+	);
+	const GLenum format = hasAlpha ? GL_RGBA : GL_RGB;
 
 	// send it to OpenGL
 	GLuint textureId = 0; // invalid
@@ -351,7 +361,7 @@ int main(int argc, char **argv)
 
 	// our texture is 32 by 32 unnormalized integer RGBA data
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 32, 32, 0, GL_RGBA,
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, format,
 	  GL_UNSIGNED_BYTE, textureBuf.get());
 	glGenerateMipmap(GL_TEXTURE_2D);
 	GLenum err = glGetError();
