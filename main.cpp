@@ -353,6 +353,7 @@ int main(int argc, char **argv)
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 32, 32, 0, GL_RGBA,
 	  GL_UNSIGNED_BYTE, textureBuf.get());
+	glGenerateMipmap(GL_TEXTURE_2D);
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR)
 	{
