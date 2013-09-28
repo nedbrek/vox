@@ -87,13 +87,13 @@ namespace
 		// allocate program resource
 		// vertex shader
 		GLuint vertexShaderId = compileShader(GL_VERTEX_SHADER,
-		  "textureVert.glsl");
+		  "vertBasic.glsl");
 		if (vertexShaderId == 0)
 			return 0;
 
 		// fragment shader
 		GLuint fragmentShaderId = compileShader(GL_FRAGMENT_SHADER,
-		  "textureFrag.glsl");
+		  "fragCube.glsl");
 		if (fragmentShaderId == 0)
 			return 0;
 
