@@ -13,67 +13,95 @@ namespace
 	const float mouseSpeed = 0.005;
 	const float speed = 3; // units per second
 
-	void makeColorTexture(unsigned char *buf, unsigned numPixels)
+	unsigned char* makeColorTexture(unsigned numPixels)
 	{
 		assert(numPixels % 4 == 0);
+		unsigned char *buf= new unsigned char[numPixels];
 		for(unsigned i = 0; i < numPixels; ++i)
 		{
-			buf[i] =   0; ++i; // red
+			buf[i] = 255; ++i; // red
 			buf[i] = 250; ++i; // green
 			buf[i] =   0; ++i; // blue
 			buf[i] = 127; // alpha
 		}
+		return buf;
 	}
 
-	GLuint makeShaderProgram()
+	std::string fileToString(const char *filename)
 	{
-		// allocate program resource
-		GLuint fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
-
-		// pull in program source code
-		const char *const fragFilename = "textureFrag.glsl";
-		std::ifstream fragFile(fragFilename);
-		if (!fragFile.is_open())
+		std::ifstream fs(filename);
+		if (!fs.is_open())
 		{
-			std::cerr << "Unable to open fragment shader " << fragFilename
-			  << '.' << std::endl;
+			std::cerr << "Unable to open shader " << filename << '.'
+			  << std::endl;
 			return 0; // invalid id
 		}
 
 		std::string fileString;
 		std::string line;
-		while (std::getline(fragFile, line))
+		while (std::getline(fs, line))
 		{
 			fileString += line;
 			fileString += '\n';
 		}
 
+		return fileString;
+	}
+
+	GLuint compileShader(GLenum type, const char *filename)
+	{
+		// allocate program resource
+		GLuint shaderId = glCreateShader(type);
+
+		// pull in source code
+		std::string fileString = fileToString(filename);
+
 		// compile it
-		const char *fragSource = fileString.c_str();
-		glShaderSource(fragmentShaderId, 1, &fragSource, NULL);
-		glCompileShader(fragmentShaderId);
+		const char *source = fileString.c_str();
+		glShaderSource(shaderId, 1, &source, NULL);
+		glCompileShader(shaderId);
 
 		// check results
 		GLint result = GL_FALSE;
-		glGetShaderiv(fragmentShaderId, GL_COMPILE_STATUS, &result);
+		glGetShaderiv(shaderId, GL_COMPILE_STATUS, &result);
 		if (result != GL_TRUE)
 		{
 			int infoLogLength = 0;
-			glGetShaderiv(fragmentShaderId, GL_INFO_LOG_LENGTH, &infoLogLength);
+			glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &infoLogLength);
 
 			std::string infoLog(infoLogLength+1, 0);
-			glGetShaderInfoLog(fragmentShaderId, infoLogLength, NULL, &infoLog[0]);
-			std::cerr << "Fragment compilation failed." << std::endl
+			glGetShaderInfoLog(shaderId, infoLogLength, NULL, &infoLog[0]);
+			std::cerr << "Shader " << std::string(filename)
+			  << " compilation failed." << std::endl
 			  << infoLog.c_str() << std::endl;
 			return 0; // invalid id
 		}
+		return shaderId;
+	}
+
+	GLuint makeShaderProgram()
+	{
+		// allocate program resource
+		// vertex shader
+		GLuint vertexShaderId = compileShader(GL_VERTEX_SHADER,
+		  "textureVert.glsl");
+		if (vertexShaderId == 0)
+			return 0;
+
+		// fragment shader
+		GLuint fragmentShaderId = compileShader(GL_FRAGMENT_SHADER,
+		  "textureFrag.glsl");
+		if (fragmentShaderId == 0)
+			return 0;
 
 		// link the program
 		GLuint programId = glCreateProgram();
+		glAttachShader(programId, vertexShaderId);
 		glAttachShader(programId, fragmentShaderId);
 		glLinkProgram(programId);
 
 		// check results
+		GLint result = GL_FALSE;
 		glGetProgramiv(programId, GL_LINK_STATUS, &result);
 		if (result != GL_TRUE)
 		{
@@ -245,6 +273,28 @@ protected:
 
 void drawScene()
 {
+	glBegin(GL_TRIANGLE_STRIP);
+
+	glVertex3f(0, 1, 0); // 4
+	glVertex3f(1, 1, 0); // 3
+	glVertex3f(0, 0, 0); // 7
+	glVertex3f(1, 0, 0); // 8
+	glVertex3f(1, 0, 1); // 5
+	glVertex3f(1, 1, 0); // 3
+	glVertex3f(1, 1, 1); // 1
+	glVertex3f(0, 1, 0); // 4
+	glVertex3f(0, 1, 1); // 2
+	glVertex3f(0, 0, 0); // 7
+	glVertex3f(0, 0, 1); // 6
+	glVertex3f(1, 0, 1); // 5
+	glVertex3f(0, 1, 1); // 2
+	glVertex3f(1, 1, 1); // 1
+
+	glEnd();
+}
+
+void drawSceneQuad()
+{
 	glBegin(GL_QUADS);
 
 	// bottom
@@ -288,11 +338,11 @@ int main(int argc, char **argv)
 	}
 
 	GLuint shaderProgram = makeShaderProgram();
+	GLuint texUnitId = glGetUniformLocation(shaderProgram, "tex");
 
 	// create texture
 	// 1k pix, 4 B per pix
-	std::auto_ptr<unsigned char> textureBuf(new unsigned char[1024*4]);
-	makeColorTexture(textureBuf.get(), 1024*4);
+	std::auto_ptr<unsigned char> textureBuf(makeColorTexture(32*32*4));
 
 	// send it to OpenGL
 	GLuint textureId = 0; // invalid
@@ -318,6 +368,9 @@ int main(int argc, char **argv)
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, textureId);
+	glUniform1i(texUnitId, 0);
+
+	glEnable(GL_CULL_FACE);
 
 	Controls ctl;
 	bool running = true;
