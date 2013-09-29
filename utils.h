@@ -10,5 +10,8 @@ std::string fileToString(const char *filename);
 unsigned char* loadPngTexture(const char *filename, int *width, int *height,
   bool *hasAlpha);
 
+///@return 0 on successful initialization of graphics context
+int initGraphics();
+
 #endif
 
