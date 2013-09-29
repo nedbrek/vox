@@ -57,7 +57,6 @@ int main(int argc, char **argv)
 	}
 
 	GLuint shaderProgram = makeShaderProgram();
-	GLuint texUnitId = glGetUniformLocation(shaderProgram, "tex");
 
 	// create texture
 	// 1k pix, 4 B per pix
@@ -95,7 +94,6 @@ int main(int argc, char **argv)
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, textureId);
-	glUniform1i(texUnitId, 0);
 
 	glEnable(GL_CULL_FACE);
 
