@@ -17,7 +17,7 @@ LDFLAGS := -Wall -lglfw -lGLEW -lpng
 	@g++ $(CXXFLAGS) -c -o $@ $<
 
 $(BIN): $(OBJ)
-	@g++ $(LDFLAGS) -o $@ $^
+	g++ -o $@ $^ $(LDFLAGS)
 
 clean:
 	@rm -f $(BIN) $(OBJ)
