@@ -1,3 +1,4 @@
+#include "chunk.h"
 #include "controls.h"
 #include "camera.h"
 #include "shader.h"
@@ -7,26 +8,13 @@
 #include <iostream>
 #include <memory>
 
-void drawScene()
+/// populate a chunk - should probably take a random seed
+void fillChunk(unsigned char *blockIds)
 {
-	glBegin(GL_TRIANGLE_STRIP);
+	for(unsigned i = 0; i < 4096; ++i)
+		blockIds[i] = 0;
 
-	glVertex3f(0, 1, 0); // 4
-	glVertex3f(1, 1, 0); // 3
-	glVertex3f(0, 0, 0); // 7
-	glVertex3f(1, 0, 0); // 8
-	glVertex3f(1, 0, 1); // 5
-	glVertex3f(1, 1, 0); // 3
-	glVertex3f(1, 1, 1); // 1
-	glVertex3f(0, 1, 0); // 4
-	glVertex3f(0, 1, 1); // 2
-	glVertex3f(0, 0, 0); // 7
-	glVertex3f(0, 0, 1); // 6
-	glVertex3f(1, 0, 1); // 5
-	glVertex3f(0, 1, 1); // 2
-	glVertex3f(1, 1, 1); // 1
-
-	glEnd();
+	blockIds[Chunk::index(0, 0, 0)] = 1;
 }
 
 int main(int argc, char **argv)
@@ -75,6 +63,10 @@ int main(int argc, char **argv)
 
 	glEnable(GL_CULL_FACE);
 
+	unsigned char *chunk0 = new unsigned char[4096];
+	fillChunk(chunk0);
+	Chunk centerChunk(chunk0, 0, 0, 0);
+
 	Controls ctl;
 	bool running = true;
 	while (running)
@@ -88,7 +80,7 @@ int main(int argc, char **argv)
 		// clear screen
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		drawScene();
+		centerChunk.render();
 
 		// swap double buffers
 		glfwSwapBuffers();
@@ -99,6 +91,7 @@ int main(int argc, char **argv)
 
 	// cleanup
 	glfwTerminate();
+	delete[] chunk0;
 	return 0;
 }
 

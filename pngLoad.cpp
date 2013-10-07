@@ -99,7 +99,7 @@ unsigned char* loadPngTexture(const char *filename, int *width, int *height,
 
 	// load by row
 	png_byte **row_pointers = new png_byte*[temp_height * sizeof(png_byte*)];
-	for (unsigned i = 0; i < temp_height; ++i)
+	for(unsigned i = 0; i < temp_height; ++i)
 	{
 		row_pointers[temp_height - 1 - i] = image_data + i * rowbytes;
 	}

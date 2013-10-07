@@ -1,6 +1,6 @@
 .PHONY: all clean
 
-SRC := main.cpp pngLoad.cpp camera.cpp controls.cpp shader.cpp utils.cpp
+SRC := main.cpp camera.cpp chunk.cpp controls.cpp pngLoad.cpp shader.cpp utils.cpp
 
 BIN := vox.exe
 OBJ := $(SRC:.cpp=.o)
@@ -17,7 +17,7 @@ LDFLAGS := -Wall -lglfw -lGLEW -lpng
 	@g++ $(CXXFLAGS) -c -o $@ $<
 
 $(BIN): $(OBJ)
-	g++ -o $@ $^ $(LDFLAGS)
+	@g++ -o $@ $^ $(LDFLAGS)
 
 clean:
 	@rm -f $(BIN) $(OBJ)
