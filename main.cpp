@@ -15,6 +15,7 @@ void fillChunk(unsigned char *blockIds)
 		blockIds[i] = 0;
 
 	blockIds[Chunk::index(0, 0, 0)] = 1;
+	blockIds[Chunk::index(0, 0, 1)] = 1;
 }
 
 int main(int argc, char **argv)
@@ -57,11 +58,17 @@ int main(int argc, char **argv)
 	glfwEnable(GLFW_STICKY_KEYS);
 
 	glUseProgram(shaderProgram);
+	const GLint uniformBlockLoc = glGetUniformLocation(shaderProgram, "blockOffset");
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, textureId);
 
+	// cull back faces
 	glEnable(GL_CULL_FACE);
+
+	// enable depth buffer
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
 
 	unsigned char *chunk0 = new unsigned char[4096];
 	fillChunk(chunk0);
@@ -78,9 +85,9 @@ int main(int argc, char **argv)
 		glMultMatrixf(glm::value_ptr(camera.view()));
 
 		// clear screen
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		centerChunk.render();
+		centerChunk.render(uniformBlockLoc);
 
 		// swap double buffers
 		glfwSwapBuffers();

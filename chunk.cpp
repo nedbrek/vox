@@ -1,5 +1,5 @@
 #include "chunk.h"
-#include <GL/gl.h>
+#include <GL/glew.h>
 
 Chunk::Chunk(unsigned char *blockIds, int x, int y, int z)
 : blockIds_(blockIds)
@@ -14,7 +14,7 @@ unsigned Chunk::index(unsigned x, unsigned y, unsigned z)
 	return x + y * 16 + z * 256;
 }
 
-void Chunk::render()
+void Chunk::render(int uniformBlock)
 {
 	// TODO: update uniform chunk x/y/z
 
@@ -25,7 +25,12 @@ void Chunk::render()
 		if (blockIds_[i] == 0)
 			continue;
 
-		// TODO: update uniform intra-chunk x/y/z
+		// update uniform intra-chunk block x/y/z
+		const unsigned x = i & 15;
+		const unsigned y = (i >> 4) & 15;
+		const unsigned z = (i >> 8) & 15;
+		glUniform3ui(uniformBlock, x, y, z);
+
 		// render block (TODO: select texture)
 		// TODO: vertex buffer
 		glBegin(GL_TRIANGLE_STRIP);

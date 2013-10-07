@@ -38,7 +38,7 @@ GLuint makeShaderProgram()
 	// allocate program resource
 	// vertex shader
 	GLuint vertexShaderId = compileShader(GL_VERTEX_SHADER,
-	  "vertBasic.glsl");
+	  "vertOffset.glsl");
 	if (vertexShaderId == 0)
 		return 0;
 

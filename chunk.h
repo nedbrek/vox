@@ -7,7 +7,7 @@ class Chunk
 public:
 	Chunk(unsigned char *blockIds, int x, int y, int z);
 
-	void render();
+	void render(int uniformBlock);
 
 	///@return the index of a block within a chunk
 	// (0, 0, 0) is the lower left front block
