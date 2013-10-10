@@ -3,6 +3,7 @@
 #include "camera.h"
 #include "shader.h"
 #include "utils.h"
+#include <FTGL/ftgl.h>
 #include <GL/glfw.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
@@ -14,14 +15,23 @@ void fillChunk(unsigned char *blockIds)
 	for(unsigned i = 0; i < 4096; ++i)
 		blockIds[i] = 0;
 
-	blockIds[Chunk::index(0, 0, 0)] = 1;
-	blockIds[Chunk::index(0, 0, 1)] = 1;
+	for(unsigned x = 0; x < 16; ++x)
+	for(unsigned z = 0; z < 16; ++z)
+		blockIds[Chunk::index(x, 0, z)] = 1;
 }
 
 int main(int argc, char **argv)
 {
 	if (initGraphics() != 0)
 		return 1;
+
+	FTGLPixmapFont font("/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf");
+	if (font.Error())
+	{
+		std::cerr << "Error opening font" << std::endl;
+		return 1;
+	}
+	font.FaceSize(12);
 
 	GLuint shaderProgram = makeShaderProgram();
 
@@ -88,6 +98,7 @@ int main(int argc, char **argv)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		centerChunk.render(uniformBlockLoc);
+		font.Render("Hello world", -1, FTPoint(500, 300));
 
 		// swap double buffers
 		glfwSwapBuffers();
