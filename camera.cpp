@@ -26,7 +26,7 @@ glm::mat4 Camera::view() const
 {
 	return glm::lookAt(
 	  position(),
-	  glm::vec3(tX_, tY_, tZ_), // target xyz
+	  targetPosition(),
 	  headVec_
 	);
 }
@@ -41,6 +41,11 @@ void Camera::setPosition(const glm::vec3 &pos)
 	x_ = pos[0];
 	y_ = pos[1];
 	z_ = pos[2];
+}
+
+glm::vec3 Camera::targetPosition() const
+{
+	return glm::vec3(tX_, tY_, tZ_);
 }
 
 void Camera::setTargetPosition(const glm::vec3 &v)

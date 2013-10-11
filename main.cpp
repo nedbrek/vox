@@ -1,6 +1,7 @@
 #include "chunk.h"
 #include "controls.h"
 #include "camera.h"
+#include "hud.h"
 #include "shader.h"
 #include "utils.h"
 #include <FTGL/ftgl.h>
@@ -9,6 +10,11 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+
+std::ostream& operator<<(std::ostream &os, const glm::vec3 &v)
+{
+	return os << '(' << v[0] << ',' << v[1] << ',' << v[2] << ')';
+}
 
 /// populate a chunk - should probably take a random seed
 void fillChunk(unsigned char *blockIds)
@@ -85,6 +91,10 @@ int main(int argc, char **argv)
 	fillChunk(chunk0);
 	Chunk centerChunk(chunk0, 0, 0, 0);
 
+	Hud hud;
+	const size_t varFPS = hud.addVarLine("FPS: ", "0");
+	const size_t varPos = hud.addVarLine("Position: ", "-");
+	const size_t varTgt = hud.addVarLine("Target: ", "-");
 	Controls ctl;
 	bool running = true;
 	while (running)
@@ -101,8 +111,18 @@ int main(int argc, char **argv)
 		centerChunk.render(uniformBlockLoc);
 
 		std::ostringstream os;
-		os << "FPS: " << ctl.fps();
-		font.Render(os.str().c_str(), -1, FTPoint(0, 0));
+		os << ctl.fps();
+		hud.updateVarLine(varFPS, os.str().c_str());
+
+		os.str("");
+		os << camera.position();
+		hud.updateVarLine(varPos, os.str().c_str());
+
+		os.str("");
+		os << camera.targetPosition();
+		hud.updateVarLine(varTgt, os.str().c_str());
+
+		hud.render(font);
 
 		// swap double buffers
 		glfwSwapBuffers();

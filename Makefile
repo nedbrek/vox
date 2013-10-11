@@ -1,6 +1,7 @@
 .PHONY: all clean
 
-SRC := main.cpp camera.cpp chunk.cpp controls.cpp pngLoad.cpp shader.cpp utils.cpp
+SRC := main.cpp camera.cpp chunk.cpp controls.cpp hud.cpp pngLoad.cpp \
+shader.cpp utils.cpp
 
 BIN := vox.exe
 OBJ := $(SRC:.cpp=.o)
