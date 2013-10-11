@@ -8,6 +8,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <memory>
+#include <sstream>
 
 /// populate a chunk - should probably take a random seed
 void fillChunk(unsigned char *blockIds)
@@ -98,7 +99,10 @@ int main(int argc, char **argv)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		centerChunk.render(uniformBlockLoc);
-		font.Render("Hello world", -1, FTPoint(500, 300));
+
+		std::ostringstream os;
+		os << "FPS: " << ctl.fps();
+		font.Render(os.str().c_str(), -1, FTPoint(0, 0));
 
 		// swap double buffers
 		glfwSwapBuffers();

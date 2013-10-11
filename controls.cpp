@@ -13,7 +13,10 @@ Controls::Controls()
 : lastTime_(glfwGetTime())
 , windowWidth_(1092)
 , windowHeight_(614)
+, framesSinceLastInterval_(0)
+, fps_(0)
 {
+	lastInterval_ = lastTime_;
 	glfwDisable(GLFW_MOUSE_CURSOR);
 }
 
@@ -21,6 +24,16 @@ void Controls::beginFrame(Camera *cp)
 {
 	const double curTime = glfwGetTime();
 	const double deltaT = curTime - lastTime_;
+
+	const double deltaInterval = curTime - lastInterval_;
+	if (deltaInterval > 1)
+	{
+		fps_ = framesSinceLastInterval_ / deltaInterval;
+		framesSinceLastInterval_ = 0;
+		lastInterval_ = curTime;
+	}
+
+	++framesSinceLastInterval_;
 
 	// find amount of mouse motion since last frame
 	int mouseX, mouseY;
