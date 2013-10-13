@@ -3,6 +3,7 @@
 #include "camera.h"
 #include "hud.h"
 #include "shader.h"
+#include "texture.h"
 #include "utils.h"
 #include <FTGL/ftgl.h>
 #include <GL/glfw.h>
@@ -42,33 +43,7 @@ int main(int argc, char **argv)
 
 	GLuint shaderProgram = makeShaderProgram();
 
-	// create texture
-	// 1k pix, 4 B per pix
-	//std::auto_ptr<unsigned char> textureBuf(makeColorTexture(32*32*4));
-	int width = 0, height = 0;
-	bool hasAlpha = false;
-	std::auto_ptr<unsigned char> textureBuf(
-	  loadPngTexture("textures/blocks/stone.png",
-	    &width, &height, &hasAlpha)
-	);
-	const GLenum format = hasAlpha ? GL_RGBA : GL_RGB;
-
-	// send it to OpenGL
-	GLuint textureId = 0; // invalid
-	glGenTextures(1, &textureId);
-	glBindTexture(GL_TEXTURE_2D, textureId);
-
-	// our texture is 32 by 32 unnormalized integer RGBA data
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, format,
-	  GL_UNSIGNED_BYTE, textureBuf.get());
-	glGenerateMipmap(GL_TEXTURE_2D);
-	GLenum err = glGetError();
-	if (err != GL_NO_ERROR)
-	{
-		std::cerr << "Error creating texture." << std::endl;
-		return 1;
-	}
+	Texture stone("textures/blocks/stone.png");
 
 	Camera camera;
 	// track key down events until we get around to them
@@ -78,7 +53,7 @@ int main(int argc, char **argv)
 	const GLint uniformBlockLoc = glGetUniformLocation(shaderProgram, "blockOffset");
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, textureId);
+	stone.makeActive();
 
 	// cull back faces
 	glEnable(GL_CULL_FACE);
