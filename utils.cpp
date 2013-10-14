@@ -50,6 +50,8 @@ int initGraphics()
 		return 1;
 	}
 
+	glfwSwapInterval(1);
+
 	return 0; // success
 }
 

@@ -70,6 +70,7 @@ int main(int argc, char **argv)
 	const size_t varFPS = hud.addVarLine("FPS: ", "0");
 	const size_t varPos = hud.addVarLine("Position: ", "-");
 	const size_t varTgt = hud.addVarLine("Target: ", "-");
+	const size_t varMous = hud.addVarLine("Mouse: ", "-");
 	Controls ctl;
 	bool running = true;
 	while (running)
@@ -85,6 +86,7 @@ int main(int argc, char **argv)
 
 		centerChunk.render(uniformBlockLoc);
 
+		hud.updateVarLine(varMous, ctl.lastMouseDXY());
 		hud.updateVarLine(varFPS, ctl.fps());
 		hud.updateVarLine(varPos, camera.position());
 		hud.updateVarLine(varTgt, camera.targetPosition());
