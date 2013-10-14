@@ -1,13 +1,15 @@
 #ifndef CHUNK_H
 #define CHUNK_H
 
+class Resources;
+
 /// a 3d group of blocks (16 cubed)
 class Chunk
 {
 public:
 	Chunk(unsigned char *blockIds, int x, int y, int z);
 
-	void render(int uniformBlock);
+	void render(Resources &r);
 
 	///@return the index of a block within a chunk
 	// (0, 0, 0) is the lower left front block

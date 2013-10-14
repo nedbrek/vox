@@ -1,3 +1,4 @@
+#include <GL/glew.h>
 #include "shader.h"
 #include "utils.h"
 #include <iostream>

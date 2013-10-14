@@ -1,5 +1,7 @@
-#include "chunk.h"
 #include <GL/glew.h>
+#include "chunk.h"
+#include "resources.h"
+#include "texture.h"
 
 Chunk::Chunk(unsigned char *blockIds, int x, int y, int z)
 : blockIds_(blockIds)
@@ -14,24 +16,32 @@ unsigned Chunk::index(unsigned x, unsigned y, unsigned z)
 	return x + y * 16 + z * 256;
 }
 
-void Chunk::render(int uniformBlock)
+void Chunk::render(Resources &r)
 {
+	glUseProgram(r.mainShader());
+
 	// TODO: update uniform chunk x/y/z
 
 	// foreach block
 	for(unsigned i = 0; i < 4096; ++i)
 	{
+		const unsigned char blockId = blockIds_[i];
+
 		// 0 is empty space
-		if (blockIds_[i] == 0)
+		if (blockId == 0)
 			continue;
+
+		// make the texture active
+		glActiveTexture(GL_TEXTURE0);
+		r.textureFromId(blockId).makeActive();
 
 		// update uniform intra-chunk block x/y/z
 		const unsigned x = i & 15;
 		const unsigned y = (i >> 4) & 15;
 		const unsigned z = (i >> 8) & 15;
-		glUniform3ui(uniformBlock, x, y, z);
+		glUniform3ui(r.uniformBlockLocation(), x, y, z);
 
-		// render block (TODO: select texture)
+		// render block
 		// TODO: vertex buffer
 		glBegin(GL_TRIANGLE_STRIP);
 

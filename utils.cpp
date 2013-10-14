@@ -52,6 +52,13 @@ int initGraphics()
 
 	glfwSwapInterval(1);
 
+	// cull back faces
+	glEnable(GL_CULL_FACE);
+
+	// enable depth buffer
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+
 	return 0; // success
 }
 

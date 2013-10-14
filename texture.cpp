@@ -7,6 +7,9 @@
 Texture::Texture(const char *filename)
 : textureId_(0)
 {
+	if (filename[0] == 0)
+		return;
+
 	// create texture
 	// 1k pix, 4 B per pix
 	//std::auto_ptr<unsigned char> textureBuf(makeColorTexture(32*32*4));

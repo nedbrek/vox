@@ -1,6 +1,7 @@
 #include "controls.h"
 #include "camera.h"
 #include <GL/glfw.h>
+#include <glm/gtc/type_ptr.hpp>
 #include <sstream>
 
 namespace
@@ -23,6 +24,9 @@ Controls::Controls()
 {
 	lastInterval_ = lastTime_;
 	glfwDisable(GLFW_MOUSE_CURSOR);
+
+	// track key down events until we get around to them
+	glfwEnable(GLFW_STICKY_KEYS);
 }
 
 std::string Controls::lastMouseDXY() const
@@ -112,5 +116,12 @@ void Controls::beginFrame(Camera *cp)
 	cp->setHeadVec(up);
 
 	lastTime_ = curTime;
+
+	// clear screen
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// build MVP matrix
+	glLoadMatrixf(glm::value_ptr(cp->projection()));
+	glMultMatrixf(glm::value_ptr(cp->view()));
 }
 
