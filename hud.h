@@ -1,6 +1,7 @@
 #ifndef HUD_H
 #define HUD_H
 
+#include <sstream>
 #include <string>
 #include <vector>
 class FTFont;
@@ -26,7 +27,14 @@ public:
 
 	/// a line with a variable portion
 	size_t addVarLine(const char *prefix, const std::string &initVal);
-	void updateVarLine(size_t id, const std::string &newVal);
+
+	template<typename T>
+	void updateVarLine(size_t id, const T &newVal)
+	{
+		std::ostringstream os;
+		os << newVal;
+		updateVarLine(id, os.str());
+	}
 
 	/// render all lines
 	void render(FTFont &font);

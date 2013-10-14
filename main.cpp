@@ -85,17 +85,9 @@ int main(int argc, char **argv)
 
 		centerChunk.render(uniformBlockLoc);
 
-		std::ostringstream os;
-		os << ctl.fps();
-		hud.updateVarLine(varFPS, os.str().c_str());
-
-		os.str("");
-		os << camera.position();
-		hud.updateVarLine(varPos, os.str().c_str());
-
-		os.str("");
-		os << camera.targetPosition();
-		hud.updateVarLine(varTgt, os.str().c_str());
+		hud.updateVarLine(varFPS, ctl.fps());
+		hud.updateVarLine(varPos, camera.position());
+		hud.updateVarLine(varTgt, camera.targetPosition());
 
 		hud.render(font);
 

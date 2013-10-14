@@ -1,6 +1,5 @@
 #include "hud.h"
 #include <FTGL/ftgl.h>
-#include <sstream>
 #include <string>
 
 static int FONT_OFFSET = 3;
@@ -75,7 +74,8 @@ size_t Hud::addVarLine(const char *prefix, const std::string &initVal)
 	return ret;
 }
 
-void Hud::updateVarLine(size_t id, const std::string &newVal)
+template<>
+void Hud::updateVarLine<std::string>(size_t id, const std::string &newVal)
 {
 	LineVar *l = id < lines_.size() ? dynamic_cast<LineVar*>(lines_[id]) : NULL;
 	if (l)
