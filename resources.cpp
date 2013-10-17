@@ -3,7 +3,23 @@
 #include "shader.h"
 #include "texture.h"
 #include <FTGL/ftgl.h>
+#include <cassert>
+#include <memory>
 #include <iostream>
+
+unsigned char* makeColorTexture(unsigned numBytes)
+{
+	assert(numBytes % 4 == 0);
+	unsigned char *buf= new unsigned char[numBytes];
+	for(unsigned i = 0; i < numBytes; ++i)
+	{
+		buf[i] = 255; ++i; // red
+		buf[i] = 250; ++i; // green
+		buf[i] =   0; ++i; // blue
+		buf[i] = 127; // alpha
+	}
+	return buf;
+}
 
 Resources::Resources()
 {
@@ -20,6 +36,10 @@ Resources::Resources()
 
 	textures_.push_back(new Texture("")); // air
 	textures_.push_back(new Texture("textures/blocks/stone.png"));
+
+	//std::auto_ptr<unsigned char> textureBuf(makeColorTexture(32*32*4));
+	//textures_.push_back(new Texture(textureBuf.get(), 32, 32, true));
+	textures_.push_back(new Texture("textures/blocks/glass.png"));
 }
 
 Resources::~Resources()

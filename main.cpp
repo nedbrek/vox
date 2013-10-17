@@ -23,6 +23,10 @@ void fillChunk(unsigned char *blockIds)
 	for(unsigned x = 0; x < 16; ++x)
 	for(unsigned z = 0; z < 16; ++z)
 		blockIds[Chunk::index(x, 0, z)] = 1;
+
+	for(unsigned x = 0; x < 16; ++x)
+	for(unsigned z = 0; z < 16; ++z)
+		blockIds[Chunk::index(x, 1, z)] = 2;
 }
 
 int main(int argc, char **argv)
