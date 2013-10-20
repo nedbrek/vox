@@ -44,7 +44,7 @@ bool Texture::init(const unsigned char *bytes, int w, int h, bool alpha)
 	  GL_UNSIGNED_BYTE, bytes);
 	glGenerateMipmap(GL_TEXTURE_2D);
 
-	return glGetError() != GL_NO_ERROR;
+	return glGetError() == GL_NO_ERROR;
 }
 
 void Texture::makeActive()
