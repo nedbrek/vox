@@ -34,9 +34,18 @@ int main(int argc, char **argv)
 	if (initGraphics() != 0)
 		return 1;
 
-	unsigned char *chunk0 = new unsigned char[4096];
-	fillChunk(chunk0);
-	Chunk centerChunk(chunk0, 0, 0, 0);
+	const int BOT = -1;
+	const int TOP = 3;
+	unsigned char *chunkData[63][63];
+	Chunk *chunks[63][63];
+	for(int x = BOT; x < TOP; ++x)
+		for(int z = BOT; z < TOP; ++z)
+		{
+			unsigned char *chunk0 = new unsigned char[4096];
+			chunkData[x+31][z+31] = chunk0;
+			fillChunk(chunk0);
+			chunks[x+31][z+31] = new Chunk(chunk0, x, 0, z);
+		}
 
 	Resources res;
 	Camera camera;
@@ -53,7 +62,9 @@ int main(int argc, char **argv)
 	{
 		ctl.beginFrame(&camera);
 
-		centerChunk.render(res);
+		for(int x = BOT; x < TOP; ++x)
+			for(int z = BOT; z < TOP; ++z)
+				chunks[x+31][z+31]->render(res);
 
 		//hud.updateVarLine(varMous, ctl.lastMouseDXY());
 		hud.updateVarLine(varFPS, ctl.fps());
@@ -71,7 +82,13 @@ int main(int argc, char **argv)
 
 	// cleanup
 	glfwTerminate();
-	delete[] chunk0;
+	for(int x = BOT; x < TOP; ++x)
+		for(int z = BOT; z < TOP; ++z)
+		{
+			delete[] chunkData[x+31][z+31];
+			delete chunks[x+31][z+31];
+		}
+
 	return 0;
 }
 

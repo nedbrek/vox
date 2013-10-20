@@ -20,7 +20,9 @@ void Chunk::render(Resources &r)
 {
 	glUseProgram(r.mainShader());
 
-	// TODO: update uniform chunk x/y/z
+	const int chunkX = x_ * 16;
+	const int chunkY = y_ * 16;
+	const int chunkZ = z_ * 16;
 
 	// foreach block
 	for(unsigned i = 0; i < 4096; ++i)
@@ -36,10 +38,10 @@ void Chunk::render(Resources &r)
 		r.textureFromId(blockId).makeActive();
 
 		// update uniform intra-chunk block x/y/z
-		const unsigned x = i & 15;
-		const unsigned y = (i >> 4) & 15;
-		const unsigned z = (i >> 8) & 15;
-		glUniform3ui(r.uniformBlockLocation(), x, y, z);
+		const int x = chunkX + (i & 15);
+		const int y = chunkY + ((i >> 4) & 15);
+		const int z = chunkZ + ((i >> 8) & 15);
+		glUniform3i(r.uniformBlockLocation(), x, y, z);
 
 		// render block
 		// TODO: vertex buffer
