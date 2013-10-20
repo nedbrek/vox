@@ -8,7 +8,7 @@ void main()
 	gl_TexCoord[0] = gl_Vertex;
 
 	// translate the block
-	vec4 position = gl_Vertex + uvec4(blockOffset, 1);
+	vec4 position = gl_Vertex + uvec4(blockOffset, 0);
 	
 	gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * position;
 } 
