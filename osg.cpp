@@ -1,5 +1,6 @@
 #include <osgGA/TrackballManipulator>
 #include <osgViewer/Viewer>
+#include <osgViewer/ViewerEventHandlers>
 
 int main(int argc, char **argv)
 {
@@ -47,11 +48,20 @@ int main(int argc, char **argv)
 	geometry->setColorArray(colors);
 	geometry->setColorBinding(osg::Geometry::BIND_OVERALL);
 
-	geode->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+	//geode->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+	osg::Program *program = new osg::Program;
+	osg::Shader *vertexShader = new osg::Shader(osg::Shader::VERTEX);
+	vertexShader->loadShaderSourceFromFile("vertBasic.glsl");
+	osg::Shader *fragmentShader = new osg::Shader(osg::Shader::FRAGMENT);
+	fragmentShader->loadShaderSourceFromFile("fragCube.glsl");
+	program->addShader(vertexShader);
+	program->addShader(fragmentShader);
+	geode->getOrCreateStateSet()->setAttributeAndModes(program, osg::StateAttribute::ON);
 
 	osgViewer::Viewer viewer;
 	viewer.setSceneData(geode);
 	viewer.setCameraManipulator(new osgGA::TrackballManipulator());
+	viewer.addEventHandler(new osgViewer::StatsHandler);
 	//viewer.realize();
 
 	while( !viewer.done() )
