@@ -1,3 +1,5 @@
+#include <osg/Texture2D>
+#include <osgDB/ReadFile>
 #include <osgGA/TrackballManipulator>
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
@@ -57,6 +59,10 @@ int main(int argc, char **argv)
 	program->addShader(vertexShader);
 	program->addShader(fragmentShader);
 	geode->getOrCreateStateSet()->setAttributeAndModes(program, osg::StateAttribute::ON);
+
+	osg::Texture2D *stoneTex = new osg::Texture2D;
+	stoneTex->setImage(osgDB::readImageFile("textures/blocks/stone.png"));
+	geode->getOrCreateStateSet()->setTextureAttributeAndModes(0, stoneTex, osg::StateAttribute::ON);
 
 	osgViewer::Viewer viewer;
 	viewer.setSceneData(geode);

@@ -24,5 +24,5 @@ clean:
 	@rm -f $(BIN) $(OBJ)
 
 osg.exe: osg.cpp
-	@g++ -o $@ -Wall osg.cpp -losg -losgViewer -losgGA
+	@g++ -o $@ -Wall osg.cpp -losg -losgViewer -losgGA -losgDB
 
