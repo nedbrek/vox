@@ -7,7 +7,7 @@ BIN := vox.exe
 OBJ := $(SRC:.cpp=.o)
 DEP := $(SRC:.cpp=.d)
 
-all: $(BIN)
+all: $(BIN) osg.exe
 
 CXXFLAGS := -MP -MMD -Wall -g $(shell freetype-config --cflags)
 LDFLAGS := -Wall -lglfw -lGLEW -lpng -lftgl
@@ -22,4 +22,7 @@ $(BIN): $(OBJ)
 
 clean:
 	@rm -f $(BIN) $(OBJ)
+
+osg.exe: osg.cpp
+	@g++ -o $@ -Wall osg.cpp -losg -losgViewer -losgGA
 
