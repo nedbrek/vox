@@ -4,7 +4,7 @@
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
 
-int main(int argc, char **argv)
+osg::Geode* oneCube()
 {
 	osg::Geode *geode = new osg::Geode;
 	osg::Geometry *geometry = new osg::Geometry;
@@ -51,6 +51,14 @@ int main(int argc, char **argv)
 	geometry->setColorBinding(osg::Geometry::BIND_OVERALL);
 
 	//geode->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+
+	return geode;
+}
+
+int main(int argc, char **argv)
+{
+	osg::Geode *geode = oneCube();
+
 	osg::Program *program = new osg::Program;
 	osg::Shader *vertexShader = new osg::Shader(osg::Shader::VERTEX);
 	vertexShader->loadShaderSourceFromFile("vertBasic.glsl");
