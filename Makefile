@@ -9,7 +9,7 @@ DEP := $(SRC:.cpp=.d)
 
 all: $(BIN)
 
-CXXFLAGS := -MP -MMD -Wall -g $(shell freetype-config --cflags)
+CXXFLAGS := -O2 -MP -MMD -Wall -g $(shell freetype-config --cflags)
 LDFLAGS := -Wall -lglfw -lGLEW -lpng -lftgl
 
 -include $(DEP)
