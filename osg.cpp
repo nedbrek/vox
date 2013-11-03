@@ -1,58 +1,15 @@
 #include <osg/CullFace>
+#include <osg/PositionAttitudeTransform>
 #include <osg/Texture2D>
 #include <osgDB/ReadFile>
 #include <osgGA/TrackballManipulator>
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
 
-unsigned index(unsigned x, unsigned y, unsigned z)
+/// create the geometry for one cube
+osg::Geometry* oneCube()
 {
-	return x + y * 16 + z * 256;
-}
-
-osg::Geode* cubeInstanced()
-{
-	osg::Geode *geode = new osg::Geode;
 	osg::Geometry *geometry = new osg::Geometry;
-	geode->addDrawable(geometry);
-
-	osg::Vec3Array *cubeVerts = new osg::Vec3Array;
-	cubeVerts->push_back(osg::Vec3(0, 1, 0)); // 3
-	cubeVerts->push_back(osg::Vec3(1, 1, 0)); // 2
-	cubeVerts->push_back(osg::Vec3(0, 0, 0)); // 6
-	cubeVerts->push_back(osg::Vec3(1, 0, 0)); // 7
-	cubeVerts->push_back(osg::Vec3(1, 0, 1)); // 4
-	cubeVerts->push_back(osg::Vec3(1, 1, 0)); // 2
-	cubeVerts->push_back(osg::Vec3(1, 1, 1)); // 0
-	cubeVerts->push_back(osg::Vec3(0, 1, 0)); // 3
-	cubeVerts->push_back(osg::Vec3(0, 1, 1)); // 1
-	cubeVerts->push_back(osg::Vec3(0, 0, 0)); // 6
-	cubeVerts->push_back(osg::Vec3(0, 0, 1)); // 5
-	cubeVerts->push_back(osg::Vec3(1, 0, 1)); // 4
-	cubeVerts->push_back(osg::Vec3(0, 1, 1)); // 1
-	cubeVerts->push_back(osg::Vec3(1, 1, 1)); // 0
-	/*cubeVerts->push_back(osg::Vec3(0, 0, 0));
-	cubeVerts->push_back(osg::Vec3(0, 0, 1));
-	cubeVerts->push_back(osg::Vec3(1, 0, 1));
-	cubeVerts->push_back(osg::Vec3(1, 0, 0));*/
-
-	geometry->setVertexArray(cubeVerts);
-
-	//geometry->addPrimitiveSet(new osg::DrawArrays(GL_QUADS, 0, 4, 1));
-	geometry->addPrimitiveSet(new osg::DrawArrays(GL_TRIANGLE_STRIP, 0, 14, 4096));
-	geometry->setUseDisplayList(false);
-
-    osg::BoundingBox bb(-1, 17, -1, 17, -1, 17);
-    geometry->setInitialBound(bb);
-
-	return geode;
-}
-
-osg::Geode* oneCube()
-{
-	osg::Geode *geode = new osg::Geode;
-	osg::Geometry *geometry = new osg::Geometry;
-	geode->addDrawable(geometry);
 
 	osg::Vec3Array *cubeVerts = new osg::Vec3Array;
 	cubeVerts->push_back(osg::Vec3(1, 1, 1)); // 0
@@ -95,48 +52,56 @@ osg::Geode* oneCube()
 	geometry->setColorBinding(osg::Geometry::BIND_OVERALL);
 	//geode->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
 
-	return geode;
+	return geometry;
 }
 
-/// populate a chunk - should probably take a random seed
-void fillChunk(unsigned char *blockIds)
+osg::Group* makeChunk(int cx, int cy, int cz, osg::Geode *stoneGeode)
 {
-	for(unsigned i = 0; i < 4096; ++i)
-		blockIds[i] = 0;
+	osg::Group *chunk = new osg::Group;
+	osg::PositionAttitudeTransform *transform = NULL;
+	for (unsigned x = 0; x < 16; ++x)
+	for (unsigned y = 0; y < 16; ++y)
+	{
+		transform = new osg::PositionAttitudeTransform;
+		transform->setPosition(osg::Vec3(cx * 16 + x, cy * 16 + y, cz * 16 + 0));
+		transform->addChild(stoneGeode);
+		chunk->addChild(transform);
+	}
 
-	for(unsigned x = 0; x < 16; ++x)
-	for(unsigned z = 0; z < 16; ++z)
-		blockIds[index(x, 0, z)] = 1;
-
-	//for(unsigned x = 0; x < 16; ++x)
-	//for(unsigned z = 0; z < 16; ++z)
-		//blockIds[index(x, 1, z)] = 2;
+	return chunk;
 }
 
 int main(int argc, char **argv)
 {
-	//osg::Geode *geode = oneCube();
-	osg::Geode *geode = cubeInstanced();
+	osg::Group *root = new osg::Group;
 
 	osg::Program *program = new osg::Program;
 	osg::Shader *vertexShader = new osg::Shader(osg::Shader::VERTEX);
-	vertexShader->loadShaderSourceFromFile("vertInstance.glsl");
+	vertexShader->loadShaderSourceFromFile("vertBasic.glsl");
 	osg::Shader *fragmentShader = new osg::Shader(osg::Shader::FRAGMENT);
 	fragmentShader->loadShaderSourceFromFile("fragCube.glsl");
 	program->addShader(vertexShader);
 	program->addShader(fragmentShader);
-	geode->getOrCreateStateSet()->setAttributeAndModes(program);
+	root->getOrCreateStateSet()->setAttributeAndModes(program);
 
 	osg::Texture2D *stoneTex = new osg::Texture2D;
 	stoneTex->setImage(osgDB::readImageFile("textures/blocks/stone.png"));
-	geode->getOrCreateStateSet()->setTextureAttributeAndModes(0, stoneTex);
+
+	osg::Geometry *cubeGeom = oneCube();
+	osg::Geode *stoneGeode = new osg::Geode;
+	stoneGeode->addDrawable(cubeGeom);
+	stoneGeode->getOrCreateStateSet()->setTextureAttributeAndModes(0, stoneTex);
+
+	for (int cx = 0; cx < 4; ++cx)
+	for (int cy = 0; cy < 4; ++cy)
+		root->addChild(makeChunk(cx, cy, 0, stoneGeode));
 
 	osg::CullFace *cull = new osg::CullFace();
 	cull->setMode(osg::CullFace::BACK);
-	geode->getOrCreateStateSet()->setAttributeAndModes(cull);
+	root->getOrCreateStateSet()->setAttributeAndModes(cull);
 
 	osgViewer::Viewer viewer;
-	viewer.setSceneData(geode);
+	viewer.setSceneData(root);
 	viewer.setCameraManipulator(new osgGA::TrackballManipulator());
 	viewer.addEventHandler(new osgViewer::StatsHandler);
 
