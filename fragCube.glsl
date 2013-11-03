@@ -5,7 +5,7 @@ uniform sampler2D tex;
 void main()
 {
 	vec2 tmp;
-	if (gl_TexCoord[0].s == 0 || gl_TexCoord[0].s == 1.)
+	if (fract(gl_TexCoord[0].s) == 0)
 	{
 		tmp.s = gl_TexCoord[0].t;
 		tmp.t = gl_TexCoord[0].p;
@@ -13,7 +13,7 @@ void main()
 	else
 	{
 		tmp.s = gl_TexCoord[0].s;
-		if (gl_TexCoord[0].t == 0 || gl_TexCoord[0].t == 1.)
+		if (fract(gl_TexCoord[0].t) == 0)
 			tmp.t = gl_TexCoord[0].p;
 		else
 			tmp.t = gl_TexCoord[0].t;
