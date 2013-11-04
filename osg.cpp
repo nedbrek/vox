@@ -1,8 +1,10 @@
+#include "chunk.h"
 #include <osg/CullFace>
 #include <osg/PositionAttitudeTransform>
 #include <osg/Texture2D>
 #include <osgDB/ReadFile>
 #include <osgGA/TrackballManipulator>
+#include <osgUtil/Optimizer>
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
 
@@ -55,22 +57,6 @@ osg::Geometry* oneCube()
 	return geometry;
 }
 
-osg::Group* makeChunk(int cx, int cy, int cz, osg::Geode *stoneGeode)
-{
-	osg::Group *chunk = new osg::Group;
-	osg::PositionAttitudeTransform *transform = NULL;
-	for (unsigned x = 0; x < 16; ++x)
-	for (unsigned y = 0; y < 16; ++y)
-	{
-		transform = new osg::PositionAttitudeTransform;
-		transform->setPosition(osg::Vec3(cx * 16 + x, cy * 16 + y, cz * 16 + 0));
-		transform->addChild(stoneGeode);
-		chunk->addChild(transform);
-	}
-
-	return chunk;
-}
-
 int main(int argc, char **argv)
 {
 	osg::Group *root = new osg::Group;
@@ -92,14 +78,33 @@ int main(int argc, char **argv)
 	stoneGeode->addDrawable(cubeGeom);
 	stoneGeode->getOrCreateStateSet()->setTextureAttributeAndModes(0, stoneTex);
 
+	unsigned char *blocks = new unsigned char[4096];
+	for (int i = 0; i < 4096; ++i)
+		blocks[i] = 0;
+	for (int x = 0; x < 16; ++x)
+	for (int y = 0; y < 16; ++y)
+		blocks[Chunk::index(x, y, 0)] = 1;
+
+	Chunk **chunks = new Chunk*[16];
+	unsigned chunkId = 0;
 	for (int cx = 0; cx < 4; ++cx)
 	for (int cy = 0; cy < 4; ++cy)
-		root->addChild(makeChunk(cx, cy, 0, stoneGeode));
+	{
+		Chunk *chunk = new Chunk(blocks, cx, cy, 0);
+		chunks[chunkId] = chunk;
+		++chunkId;
+
+		root->addChild(chunk->makeDumbChunk(stoneGeode));
+	}
 
 	osg::CullFace *cull = new osg::CullFace();
 	cull->setMode(osg::CullFace::BACK);
 	root->getOrCreateStateSet()->setAttributeAndModes(cull);
 
+	/*{
+		osgUtil::Optimizer opt;
+		opt.optimize(root, osgUtil::Optimizer::DEFAULT_OPTIMIZATIONS | osgUtil::Optimizer::MERGE_GEODES);
+	}*/
 	osgViewer::Viewer viewer;
 	viewer.setSceneData(root);
 	viewer.setCameraManipulator(new osgGA::TrackballManipulator());

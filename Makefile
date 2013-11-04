@@ -1,16 +1,15 @@
 .PHONY: all clean
 
-SRC := main.cpp camera.cpp chunk.cpp controls.cpp hud.cpp pngLoad.cpp \
-resources.cpp shader.cpp texture.cpp utils.cpp
+SRC := osg.cpp chunk.cpp
 
-BIN := vox.exe
+BIN := osg.exe
 OBJ := $(SRC:.cpp=.o)
 DEP := $(SRC:.cpp=.d)
 
-all: $(BIN) osg.exe
+all: $(BIN)
 
-CXXFLAGS := -MP -MMD -Wall -g $(shell freetype-config --cflags)
-LDFLAGS := -Wall -lglfw -lGLEW -lpng -lftgl
+CXXFLAGS := -MP -MMD -Wall -g
+LDFLAGS := -Wall -losg -losgViewer -losgGA -losgDB -losgUtil
 
 -include $(DEP)
 
@@ -22,7 +21,4 @@ $(BIN): $(OBJ)
 
 clean:
 	@rm -f $(BIN) $(OBJ)
-
-osg.exe: osg.cpp
-	@g++ -o $@ -Wall $^ -losg -losgViewer -losgGA -losgDB
 
