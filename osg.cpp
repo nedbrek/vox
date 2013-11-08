@@ -1,4 +1,5 @@
 #include "chunk.h"
+#include "resources.h"
 #include <osg/CullFace>
 #include <osg/PositionAttitudeTransform>
 #include <osg/Texture2D>
@@ -9,29 +10,15 @@
 #include <osgViewer/ViewerEventHandlers>
 
 /// create the geometry for one cube
-osg::Geometry* oneCube()
+osg::Geometry* oneCube(Resources &r)
 {
 	osg::Geometry *geometry = new osg::Geometry;
 
-	osg::Vec3Array *cubeVerts = new osg::Vec3Array;
-	cubeVerts->push_back(osg::Vec3(1, 1, 1)); // 0
-	cubeVerts->push_back(osg::Vec3(0, 1, 1)); // 1
-	cubeVerts->push_back(osg::Vec3(1, 1, 0)); // 2
-	cubeVerts->push_back(osg::Vec3(0, 1, 0)); // 3
-	cubeVerts->push_back(osg::Vec3(1, 0, 1)); // 4
-	cubeVerts->push_back(osg::Vec3(0, 0, 1)); // 5
-	cubeVerts->push_back(osg::Vec3(0, 0, 0)); // 6
-	cubeVerts->push_back(osg::Vec3(1, 0, 0)); // 7
-	geometry->setVertexArray(cubeVerts);
+	geometry->setVertexArray(r.cubeVerts());
 
 	osg::DrawElementsUByte *cubeIndexes = new osg::DrawElementsUByte(
 	  osg::PrimitiveSet::TRIANGLE_STRIP, 0);
-	  //osg::PrimitiveSet::QUADS, 0);
 
-	/*cubeIndexes->push_back(6);
-	cubeIndexes->push_back(3);
-	cubeIndexes->push_back(2);
-	cubeIndexes->push_back(7);*/
 	cubeIndexes->push_back(3);
 	cubeIndexes->push_back(2);
 	cubeIndexes->push_back(6);
@@ -48,17 +35,12 @@ osg::Geometry* oneCube()
 	cubeIndexes->push_back(0);
 	geometry->addPrimitiveSet(cubeIndexes);
 
-	osg::Vec4Array *colors = new osg::Vec4Array;
-	colors->push_back(osg::Vec4(1, 1, 1, 1));
-	geometry->setColorArray(colors);
-	geometry->setColorBinding(osg::Geometry::BIND_OVERALL);
-	//geode->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
-
 	return geometry;
 }
 
 int main(int argc, char **argv)
 {
+	Resources r;
 	osg::Group *root = new osg::Group;
 
 	osg::Program *program = new osg::Program;
@@ -73,7 +55,7 @@ int main(int argc, char **argv)
 	osg::Texture2D *stoneTex = new osg::Texture2D;
 	stoneTex->setImage(osgDB::readImageFile("textures/blocks/stone.png"));
 
-	osg::Geometry *cubeGeom = oneCube();
+	osg::Geometry *cubeGeom = oneCube(r);
 	osg::Geode *stoneGeode = new osg::Geode;
 	stoneGeode->addDrawable(cubeGeom);
 	stoneGeode->getOrCreateStateSet()->setTextureAttributeAndModes(0, stoneTex);
@@ -94,7 +76,10 @@ int main(int argc, char **argv)
 		chunks[chunkId] = chunk;
 		++chunkId;
 
-		root->addChild(chunk->makeDumbChunk(stoneGeode));
+		osg::LOD *lod = new osg::LOD;
+		lod->addChild(chunk->makeChunkMesh(r), 16, 2048);
+		lod->addChild(chunk->makeDumbChunk(stoneGeode), 0, 16);
+		root->addChild(lod);
 	}
 
 	osg::CullFace *cull = new osg::CullFace();

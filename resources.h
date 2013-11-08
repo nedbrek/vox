@@ -1,10 +1,9 @@
 #ifndef RESOURCES_H
 #define RESOURCES_H
 
-#include <GL/gl.h>
+#include <osg/Array>
 #include <vector>
-class FTFont;
-class Texture;
+namespace osg { class Texture2D; }
 
 //----------------------------------------------------------------------------
 class Resources
@@ -13,17 +12,13 @@ public:
 	Resources();
 	~Resources();
 
-	FTFont& font();
-	GLuint mainShader();
-	GLint uniformBlockLocation();
+	osg::Vec3Array* cubeVerts() { return cubeVerts_; }
 
-	Texture& textureFromId(unsigned char id);
+	osg::Texture2D& textureFromId(unsigned char id);
 
 protected:
-	FTFont *font_;
-	GLuint shaderProgram_;
-	GLint uniformBlockLoc_;
-	std::vector<Texture*> textures_;
+	osg::Vec3Array *cubeVerts_;
+	std::vector<osg::Texture2D*> textures_;
 };
 #endif
 

@@ -1,6 +1,7 @@
 #ifndef CHUNK_H
 #define CHUNK_H
 
+class Resources;
 namespace osg
 {
 	class Group;
@@ -20,6 +21,7 @@ public:
 	unsigned index(unsigned x, unsigned y, unsigned z);
 
 	osg::Group* makeDumbChunk(osg::Node *stoneGeode);
+	osg::Group* makeChunkMesh(Resources &r);
 
 private:
 	unsigned char *blockIds_;

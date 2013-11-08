@@ -1,12 +1,10 @@
-#include <GL/glew.h>
 #include "resources.h"
-#include "shader.h"
-#include "texture.h"
-#include <FTGL/ftgl.h>
+#include <osg/Texture2D>
+#include <osgDB/ReadFile>
 #include <cassert>
-#include <memory>
-#include <iostream>
 
+/*
+static
 unsigned char* makeColorTexture(unsigned numBytes)
 {
 	assert(numBytes % 4 == 0);
@@ -20,52 +18,43 @@ unsigned char* makeColorTexture(unsigned numBytes)
 	}
 	return buf;
 }
+*/
 
 Resources::Resources()
 {
-	font_ = new FTGLPixmapFont("/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf");
-	if (font_->Error())
-	{
-		std::cerr << "Error opening font" << std::endl;
-	}
-	else
-		font_->FaceSize(12);
+	cubeVerts_ = new osg::Vec3Array;
+	cubeVerts_->push_back(osg::Vec3(1, 1, 1)); // 0
+	cubeVerts_->push_back(osg::Vec3(0, 1, 1)); // 1
+	cubeVerts_->push_back(osg::Vec3(1, 1, 0)); // 2
+	cubeVerts_->push_back(osg::Vec3(0, 1, 0)); // 3
+	cubeVerts_->push_back(osg::Vec3(1, 0, 1)); // 4
+	cubeVerts_->push_back(osg::Vec3(0, 0, 1)); // 5
+	cubeVerts_->push_back(osg::Vec3(0, 0, 0)); // 6
+	cubeVerts_->push_back(osg::Vec3(1, 0, 0)); // 7
 
-	shaderProgram_ = makeShaderProgram();
-	uniformBlockLoc_ = glGetUniformLocation(shaderProgram_, "blockOffset");
+	textures_.push_back(new osg::Texture2D()); // air
 
-	textures_.push_back(new Texture("")); // air
-	textures_.push_back(new Texture("textures/blocks/stone.png"));
+	osg::Texture2D *stoneTex = new osg::Texture2D;
+	stoneTex->setImage(osgDB::readImageFile("textures/blocks/stone.png"));
+	stoneTex->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
+	stoneTex->setWrap(osg::Texture::WRAP_T, osg::Texture::REPEAT);
+	textures_.push_back(stoneTex);
 
 	//std::auto_ptr<unsigned char> textureBuf(makeColorTexture(32*32*4));
 	//textures_.push_back(new Texture(textureBuf.get(), 32, 32, true));
-	textures_.push_back(new Texture("textures/blocks/glass.png"));
+	//textures_.push_back(new Texture("textures/blocks/glass.png"));
 }
 
 Resources::~Resources()
 {
-	delete font_;
-	for(std::vector<Texture*>::const_iterator i = textures_.begin(); i != textures_.end(); ++i)
-		delete *i;
+	//for(std::vector<Texture*>::const_iterator i = textures_.begin(); i != textures_.end(); ++i)
+		//delete *i;
 }
 
-FTFont& Resources::font()
+osg::Texture2D& Resources::textureFromId(unsigned char id)
 {
-	return *font_;
-}
-
-GLuint Resources::mainShader()
-{
-	return shaderProgram_;
-}
-
-GLint Resources::uniformBlockLocation()
-{
-	return uniformBlockLoc_;
-}
-
-Texture& Resources::textureFromId(unsigned char id)
-{
+	if (id > textures_.size())
+		return *textures_[0];
 	return *textures_[id];
 }
 
