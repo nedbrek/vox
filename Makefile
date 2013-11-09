@@ -9,7 +9,7 @@ DEP := $(SRC:.cpp=.d)
 all: $(BIN)
 
 CXXFLAGS := -MP -MMD -Wall -g
-LDFLAGS := -Wall -losg -losgViewer -losgGA -losgDB -losgUtil
+LDFLAGS := -Wall -losg -losgViewer -losgGA -losgDB -losgUtil -losgText
 
 -include $(DEP)
 

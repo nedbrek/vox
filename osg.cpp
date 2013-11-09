@@ -9,7 +9,24 @@
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
 
-/// create the geometry for one cube
+///@return a slave camera for the HUD
+osg::Camera* createHUD()
+{
+	osg::Camera *camera = new osg::Camera;
+	// 2D projection with absolute, straight-on view
+	camera->setProjectionMatrix(osg::Matrix::ortho2D(0, 1366, 0, 768));
+	camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
+	camera->setViewMatrix(osg::Matrix::identity());
+
+	// make sure we draw on top of everything (and pass through events)
+	camera->setClearMask(GL_DEPTH_BUFFER_BIT);
+	camera->setRenderOrder(osg::Camera::POST_RENDER);
+	camera->setAllowEventFocus(false);
+
+	return camera;
+}
+
+///@return geometry for one cube
 osg::Geometry* oneCube(Resources &r)
 {
 	osg::Geometry *geometry = new osg::Geometry;
@@ -42,6 +59,8 @@ int main(int argc, char **argv)
 {
 	Resources r;
 	osg::Group *root = new osg::Group;
+	osg::Group *world = new osg::Group;
+	root->addChild(world);
 
 	osg::Program *program = new osg::Program;
 	osg::Shader *vertexShader = new osg::Shader(osg::Shader::VERTEX);
@@ -50,7 +69,7 @@ int main(int argc, char **argv)
 	fragmentShader->loadShaderSourceFromFile("fragCube.glsl");
 	program->addShader(vertexShader);
 	program->addShader(fragmentShader);
-	root->getOrCreateStateSet()->setAttributeAndModes(program);
+	world->getOrCreateStateSet()->setAttributeAndModes(program);
 
 	osg::Texture2D *stoneTex = new osg::Texture2D;
 	stoneTex->setImage(osgDB::readImageFile("textures/blocks/stone.png"));
@@ -67,33 +86,60 @@ int main(int argc, char **argv)
 	for (int y = 0; y < 16; ++y)
 		blocks[Chunk::index(x, y, 0)] = 1;
 
-	for (int cx = 0; cx < 36; ++cx)
-	for (int cy = 0; cy < 36; ++cy)
+	for (int cx = 0; cx < 16; ++cx)
+	for (int cy = 0; cy < 16; ++cy)
 	{
 		Chunk chunk(blocks, cx, cy, 0);
 
 		osg::LOD *lod = new osg::LOD;
 		lod->addChild(chunk.makeChunkMesh(r), 16, 2048);
 		lod->addChild(chunk.makeDumbChunk(stoneGeode), 0, 16);
-		root->addChild(lod);
+		world->addChild(lod);
 	}
 
 	osg::CullFace *cull = new osg::CullFace();
 	cull->setMode(osg::CullFace::BACK);
-	root->getOrCreateStateSet()->setAttributeAndModes(cull);
+	world->getOrCreateStateSet()->setAttributeAndModes(cull);
 
 	/*{
 		osgUtil::Optimizer opt;
-		opt.optimize(root, osgUtil::Optimizer::DEFAULT_OPTIMIZATIONS | osgUtil::Optimizer::MERGE_GEODES);
+		opt.optimize(world, osgUtil::Optimizer::DEFAULT_OPTIMIZATIONS | osgUtil::Optimizer::MERGE_GEODES);
 	}*/
+
+	osg::Camera *hudCamera = createHUD();
+	root->addChild(hudCamera);
+
+	osg::Geode* hudGeode = new osg::Geode;
+	hudCamera->addChild(hudGeode);
+	hudGeode->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+
+	osgText::Text *centerText = new osgText::Text;
+	centerText->setDataVariance(osg::Object::DYNAMIC);
+	hudGeode->addDrawable(centerText);
+
+	osgText::Text *eyeText = new osgText::Text;
+	eyeText->setDataVariance(osg::Object::DYNAMIC);
+	eyeText->setPosition(osg::Vec3(0, 30, 0));
+	hudGeode->addDrawable(eyeText);
+
 	osgViewer::Viewer viewer;
 	viewer.setSceneData(root);
 	viewer.setCameraManipulator(new osgGA::TrackballManipulator());
 	viewer.addEventHandler(new osgViewer::StatsHandler);
 
+	osg::Vec3f eye, center, up;
 	while( !viewer.done() )
 	{
 		viewer.frame();
+
+		viewer.getCamera()->getViewMatrixAsLookAt(eye, center, up);
+		std::ostringstream os;
+		os << "Center: " << center.x() << ' ' << center.y() << ' ' << center.z();
+		centerText->setText(os.str());
+
+		os.str("");
+		os << "Eye: " << eye.x() << ' ' << eye.y() << ' ' << eye.z();
+		eyeText->setText(os.str());
 	}
 
 	return 0;
