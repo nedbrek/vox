@@ -67,18 +67,14 @@ int main(int argc, char **argv)
 	for (int y = 0; y < 16; ++y)
 		blocks[Chunk::index(x, y, 0)] = 1;
 
-	Chunk **chunks = new Chunk*[16];
-	unsigned chunkId = 0;
-	for (int cx = 0; cx < 4; ++cx)
-	for (int cy = 0; cy < 4; ++cy)
+	for (int cx = 0; cx < 36; ++cx)
+	for (int cy = 0; cy < 36; ++cy)
 	{
-		Chunk *chunk = new Chunk(blocks, cx, cy, 0);
-		chunks[chunkId] = chunk;
-		++chunkId;
+		Chunk chunk(blocks, cx, cy, 0);
 
 		osg::LOD *lod = new osg::LOD;
-		lod->addChild(chunk->makeChunkMesh(r), 16, 2048);
-		lod->addChild(chunk->makeDumbChunk(stoneGeode), 0, 16);
+		lod->addChild(chunk.makeChunkMesh(r), 16, 2048);
+		lod->addChild(chunk.makeDumbChunk(stoneGeode), 0, 16);
 		root->addChild(lod);
 	}
 
