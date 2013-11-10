@@ -122,6 +122,19 @@ int main(int argc, char **argv)
 	eyeText->setPosition(osg::Vec3(0, 30, 0));
 	hudGeode->addDrawable(eyeText);
 
+	osg::Geode *hudCrosshairs = new osg::Geode;
+	osg::Geometry *crosshairGeom = new osg::Geometry;
+	osg::Vec3Array* hudVertices = new osg::Vec3Array;
+	hudVertices->push_back(osg::Vec3(1366/2, 768/2-8, 0));
+	hudVertices->push_back(osg::Vec3(1366/2, 768/2+8, 0));
+	hudVertices->push_back(osg::Vec3(1366/2-8, 768/2, 0));
+	hudVertices->push_back(osg::Vec3(1366/2+8, 768/2, 0));
+	crosshairGeom->setVertexArray(hudVertices);
+	crosshairGeom->addPrimitiveSet(new osg::DrawArrays(GL_LINES, 0, hudVertices->size()));
+
+	hudCrosshairs->addDrawable(crosshairGeom);
+	hudCamera->addChild(hudCrosshairs);
+
 	osgViewer::Viewer viewer;
 	viewer.setSceneData(root);
 	viewer.setCameraManipulator(new osgGA::TrackballManipulator());
