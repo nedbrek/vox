@@ -1,6 +1,6 @@
 .PHONY: all clean
 
-SRC := osg.cpp chunk.cpp resources.cpp
+SRC := osg.cpp chunk.cpp hud.cpp resources.cpp
 
 BIN := osg.exe
 OBJ := $(SRC:.cpp=.o)

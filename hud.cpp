@@ -1,8 +1,9 @@
 #include "hud.h"
-#include <FTGL/ftgl.h>
+#include <osg/Camera>
+#include <osg/Geode>
+#include <osg/Geometry>
+#include <osgText/Text>
 #include <string>
-
-static int FONT_OFFSET = 3;
 
 //----------------------------------------------------------------------------
 Line::~Line()
@@ -10,50 +11,86 @@ Line::~Line()
 }
 
 //----------------------------------------------------------------------------
-class StaticLine : public Line
+class LineImpl : public Line
+{
+protected:
+	osgText::Text* makeText(int offset)
+	{
+		osgText::Text *textNode = new osgText::Text;
+		textNode->setDataVariance(osg::Object::DYNAMIC);
+		textNode->setPosition(osg::Vec3(0, offset, 0));
+
+		return textNode;
+	}
+};
+//----------------------------------------------------------------------------
+class StaticLine : public LineImpl
 {
 public:
-	StaticLine(const char *str)
-	: line_(str)
+	StaticLine(osg::Geode *hudGeode, int offset, const char *str)
 	{
+		osgText::Text *text = makeText(offset);
+		text->setText(str);
+		hudGeode->addDrawable(text);
 	}
-
-	virtual std::string current() const
-	{
-		return line_;
-	}
-
-protected:
-	std::string line_;
 };
 
-class LineVar : public Line
+class LineVar : public LineImpl
 {
 public:
-	LineVar(const char *prefix, const std::string &initVal)
+	LineVar(osg::Geode *hudGeode, int offset, const char *prefix, const std::string &initVal)
 	: prefix_(prefix)
-	, var_(initVal)
 	{
-	}
+		textNode_ = makeText(offset);
+		hudGeode->addDrawable(textNode_);
 
-	virtual std::string current() const
-	{
-		return prefix_ + var_;
+		update(initVal);
 	}
 
 	void update(const std::string &newVal)
 	{
-		var_ = newVal;
+		textNode_->setText(prefix_ + newVal);
 	}
 
 protected:
+	osg::ref_ptr<osgText::Text> textNode_;
 	std::string prefix_;
-	std::string var_;
 };
 
 //----------------------------------------------------------------------------
-Hud::Hud()
+Hud::Hud(osg::Group *rootNode)
 {
+	osg::Camera *camera = new osg::Camera;
+	// 2D projection with absolute, straight-on view
+	camera->setProjectionMatrix(osg::Matrix::ortho2D(0, 1366, 0, 768));
+	camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
+	camera->setViewMatrix(osg::Matrix::identity());
+
+	// make sure we draw on top of everything (and pass through events)
+	camera->setClearMask(GL_DEPTH_BUFFER_BIT);
+	camera->setRenderOrder(osg::Camera::POST_RENDER);
+	camera->setAllowEventFocus(false);
+
+	rootNode->addChild(camera);
+
+	osg::Geode* hudGeode = new osg::Geode;
+	camera->addChild(hudGeode);
+	hudGeode->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+
+	hudNode_ = hudGeode;
+
+	osg::Geode *hudCrosshairs = new osg::Geode;
+	osg::Geometry *crosshairGeom = new osg::Geometry;
+	osg::Vec3Array* hudVertices = new osg::Vec3Array;
+	hudVertices->push_back(osg::Vec3(1366/2, 768/2-8, 0));
+	hudVertices->push_back(osg::Vec3(1366/2, 768/2+8, 0));
+	hudVertices->push_back(osg::Vec3(1366/2-8, 768/2, 0));
+	hudVertices->push_back(osg::Vec3(1366/2+8, 768/2, 0));
+	crosshairGeom->setVertexArray(hudVertices);
+	crosshairGeom->addPrimitiveSet(new osg::DrawArrays(GL_LINES, 0, hudVertices->size()));
+
+	hudCrosshairs->addDrawable(crosshairGeom);
+	camera->addChild(hudCrosshairs);
 }
 
 Hud::~Hud()
@@ -64,13 +101,14 @@ Hud::~Hud()
 
 void Hud::addStaticLine(const char *str)
 {
-	lines_.push_back(new StaticLine(str));
+	const size_t ret = lines_.size();
+	lines_.push_back(new StaticLine(hudNode_, ret * 30, str));
 }
 
 size_t Hud::addVarLine(const char *prefix, const std::string &initVal)
 {
-	size_t ret = lines_.size();
-	lines_.push_back(new LineVar(prefix, initVal));
+	const size_t ret = lines_.size();
+	lines_.push_back(new LineVar(hudNode_, ret * 30, prefix, initVal));
 	return ret;
 }
 
@@ -81,19 +119,6 @@ void Hud::updateVarLine<std::string>(size_t id, const std::string &newVal)
 	if (l)
 	{
 		l->update(newVal);
-	}
-}
-
-void Hud::render(FTFont &font)
-{
-	FTPoint linePos(FONT_OFFSET, FONT_OFFSET);
-	for(std::vector<Line*>::const_iterator i = lines_.begin(); i != lines_.end(); ++i)
-	{
-		std::string curLine = (**i).current();
-
-		const char *const curStr = curLine.c_str();
-		font.Render(curStr, -1, linePos);
-		linePos += FTPoint(0, font.BBox(curStr).Upper().Y() + FONT_OFFSET);
 	}
 }
 

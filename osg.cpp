@@ -1,3 +1,4 @@
+#include "hud.h"
 #include "chunk.h"
 #include "resources.h"
 #include <osg/CullFace>
@@ -9,21 +10,9 @@
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
 
-///@return a slave camera for the HUD
-osg::Camera* createHUD()
+std::ostream& operator<<(std::ostream &os, osg::Vec3 vec)
 {
-	osg::Camera *camera = new osg::Camera;
-	// 2D projection with absolute, straight-on view
-	camera->setProjectionMatrix(osg::Matrix::ortho2D(0, 1366, 0, 768));
-	camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
-	camera->setViewMatrix(osg::Matrix::identity());
-
-	// make sure we draw on top of everything (and pass through events)
-	camera->setClearMask(GL_DEPTH_BUFFER_BIT);
-	camera->setRenderOrder(osg::Camera::POST_RENDER);
-	camera->setAllowEventFocus(false);
-
-	return camera;
+	return os << vec.x() << ' ' << vec.y() << ' ' << vec.z();;
 }
 
 ///@return geometry for one cube
@@ -106,34 +95,10 @@ int main(int argc, char **argv)
 		opt.optimize(world, osgUtil::Optimizer::DEFAULT_OPTIMIZATIONS | osgUtil::Optimizer::MERGE_GEODES);
 	}*/
 
-	osg::Camera *hudCamera = createHUD();
-	root->addChild(hudCamera);
+	Hud hud(root);
 
-	osg::Geode* hudGeode = new osg::Geode;
-	hudCamera->addChild(hudGeode);
-	hudGeode->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
-
-	osgText::Text *centerText = new osgText::Text;
-	centerText->setDataVariance(osg::Object::DYNAMIC);
-	hudGeode->addDrawable(centerText);
-
-	osgText::Text *eyeText = new osgText::Text;
-	eyeText->setDataVariance(osg::Object::DYNAMIC);
-	eyeText->setPosition(osg::Vec3(0, 30, 0));
-	hudGeode->addDrawable(eyeText);
-
-	osg::Geode *hudCrosshairs = new osg::Geode;
-	osg::Geometry *crosshairGeom = new osg::Geometry;
-	osg::Vec3Array* hudVertices = new osg::Vec3Array;
-	hudVertices->push_back(osg::Vec3(1366/2, 768/2-8, 0));
-	hudVertices->push_back(osg::Vec3(1366/2, 768/2+8, 0));
-	hudVertices->push_back(osg::Vec3(1366/2-8, 768/2, 0));
-	hudVertices->push_back(osg::Vec3(1366/2+8, 768/2, 0));
-	crosshairGeom->setVertexArray(hudVertices);
-	crosshairGeom->addPrimitiveSet(new osg::DrawArrays(GL_LINES, 0, hudVertices->size()));
-
-	hudCrosshairs->addDrawable(crosshairGeom);
-	hudCamera->addChild(hudCrosshairs);
+	const size_t centerIdx = hud.addVarLine("Center: ", "");
+	const size_t eyeIdx = hud.addVarLine("Eye: ", "");
 
 	osgViewer::Viewer viewer;
 	viewer.setSceneData(root);
@@ -146,13 +111,8 @@ int main(int argc, char **argv)
 		viewer.frame();
 
 		viewer.getCamera()->getViewMatrixAsLookAt(eye, center, up);
-		std::ostringstream os;
-		os << "Center: " << center.x() << ' ' << center.y() << ' ' << center.z();
-		centerText->setText(os.str());
-
-		os.str("");
-		os << "Eye: " << eye.x() << ' ' << eye.y() << ' ' << eye.z();
-		eyeText->setText(os.str());
+		hud.updateVarLine(centerIdx, center);
+		hud.updateVarLine(eyeIdx, eye);
 	}
 
 	return 0;
