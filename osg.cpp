@@ -44,13 +44,8 @@ osg::Geometry* oneCube(Resources &r)
 	return geometry;
 }
 
-int main(int argc, char **argv)
+void addShader(osg::Group *node)
 {
-	Resources r;
-	osg::Group *root = new osg::Group;
-	osg::Group *world = new osg::Group;
-	root->addChild(world);
-
 	osg::Program *program = new osg::Program;
 	osg::Shader *vertexShader = new osg::Shader(osg::Shader::VERTEX);
 	vertexShader->loadShaderSourceFromFile("vertBasic.glsl");
@@ -58,7 +53,17 @@ int main(int argc, char **argv)
 	fragmentShader->loadShaderSourceFromFile("fragCube.glsl");
 	program->addShader(vertexShader);
 	program->addShader(fragmentShader);
-	world->getOrCreateStateSet()->setAttributeAndModes(program);
+	node->getOrCreateStateSet()->setAttributeAndModes(program);
+}
+
+int main(int argc, char **argv)
+{
+	Resources r;
+	osg::Group *root = new osg::Group;
+	osg::Group *world = new osg::Group;
+	root->addChild(world);
+
+	addShader(world);
 
 	osg::Texture2D *stoneTex = new osg::Texture2D;
 	stoneTex->setImage(osgDB::readImageFile("textures/blocks/stone.png"));
