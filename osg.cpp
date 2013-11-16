@@ -10,6 +10,61 @@
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
 
+class EventHandler : public osgGA::GUIEventHandler
+{
+protected:
+	osg::Vec3f eye, center, up;
+
+public:
+	EventHandler()
+	{
+		eye = osg::Vec3f(0, 2, 1.5);
+		center = osg::Vec3f(0, 1, 1.5);
+		up = osg::Vec3f(0, 0, 1);
+	}
+
+	virtual bool handle(const osgGA::GUIEventAdapter &ea, osgGA::GUIActionAdapter &us)
+	{
+		osgViewer::Viewer *viewer = dynamic_cast<osgViewer::Viewer*>(&us);
+
+		switch (ea.getEventType())
+		{
+		case osgGA::GUIEventAdapter::KEYDOWN:
+			switch (ea.getKey())
+			{
+			case 'a':
+				eye.set(eye.x() + 1, eye.y(), eye.z());
+				center.set(center.x() + 1, center.y(), center.z());
+				viewer->getCamera()->setViewMatrixAsLookAt(eye, center, up);
+				return true;
+
+			case 'd':
+				eye.set(eye.x() - 1, eye.y(), eye.z());
+				center.set(center.x() - 1, center.y(), center.z());
+				viewer->getCamera()->setViewMatrixAsLookAt(eye, center, up);
+				return true;
+
+			case 'x':
+				eye.set(eye.x(), eye.y() + 1, eye.z());
+				center.set(center.x(), center.y() + 1, center.z());
+				viewer->getCamera()->setViewMatrixAsLookAt(eye, center, up);
+				return true;
+
+			case 'w':
+				eye.set(eye.x(), eye.y() - 1, eye.z());
+				center.set(center.x(), center.y() - 1, center.z());
+				viewer->getCamera()->setViewMatrixAsLookAt(eye, center, up);
+				return true;
+
+			default:;
+			}
+
+		default:;
+		}
+		return false;
+	}
+};
+
 std::ostream& operator<<(std::ostream &os, osg::Vec3 vec)
 {
 	return os << vec.x() << ' ' << vec.y() << ' ' << vec.z();;
@@ -107,10 +162,22 @@ int main(int argc, char **argv)
 
 	osgViewer::Viewer viewer;
 	viewer.setSceneData(root);
-	viewer.setCameraManipulator(new osgGA::TrackballManipulator());
-	viewer.addEventHandler(new osgViewer::StatsHandler);
+	viewer.realize();
 
 	osg::Vec3f eye, center, up;
+	eye = osg::Vec3f(0, 2, 1.5);
+	center = osg::Vec3f(0, 1, 1.5);
+	up = osg::Vec3f(0, 0, 1);
+	viewer.getCamera()->setViewMatrixAsLookAt(eye, center, up);
+
+	osgViewer::GraphicsWindow *window = dynamic_cast<osgViewer::GraphicsWindow*>(
+	    viewer.getCamera()->getGraphicsContext());
+	window->useCursor(false);
+
+	osg::ref_ptr<EventHandler> eh = new EventHandler;
+	viewer.addEventHandler(eh);
+	viewer.addEventHandler(new osgViewer::StatsHandler);
+
 	while( !viewer.done() )
 	{
 		viewer.frame();
