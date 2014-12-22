@@ -78,7 +78,7 @@ int main(int argc, char **argv)
 	bool running = true;
 	while (running)
 	{
-		ctl.beginFrame(&camera);
+		//ctl.beginFrame(&camera);
 
 		// build MVP matrix
 		glLoadMatrixf(glm::value_ptr(camera.projection()));
@@ -87,7 +87,13 @@ int main(int argc, char **argv)
 		// clear screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		centerChunk.render(uniformBlockLoc);
+		//centerChunk.render(uniformBlockLoc);
+		glBegin(GL_QUADS);
+		glVertex3f(0, 0, 0);
+		glVertex3f(1, 0, 0);
+		glVertex3f(1, 1, 0);
+		glVertex3f(0, 1, 0);
+		glEnd();
 
 		// swap double buffers
 		glfwSwapBuffers();

@@ -2,15 +2,15 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 Camera::Camera()
-: x_(-1)
-, y_(-1)
-, z_(2)
-, tX_(0)
-, tY_(0)
-, tZ_(0)
-, headVec_(0, 1, 0)
+: x_(.5)
+, y_(.5)
+, z_(.5)
+, tX_(.5)
+, tY_(.5)
+, tZ_(-1.)
+, headVec_(0., 1., 0.)
 , fov_(90)
-, aspectRatio_(16./9)
+, aspectRatio_(1.)
 , nearClipPlane_(.1)
 , farClipPlane_(100)
 {
