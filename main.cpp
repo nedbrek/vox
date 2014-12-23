@@ -4,6 +4,7 @@
 #include "shader.h"
 #include "utils.h"
 #include <GL/glfw.h>
+#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <memory>
@@ -58,7 +59,6 @@ int main(int argc, char **argv)
 	glfwEnable(GLFW_STICKY_KEYS);
 
 	glUseProgram(shaderProgram);
-	const GLint uniformBlockLoc = glGetUniformLocation(shaderProgram, "blockOffset");
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, textureId);
@@ -70,24 +70,34 @@ int main(int argc, char **argv)
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 
+	// fixed perspective
+	glLoadMatrixf(glm::value_ptr(glm::perspective(
+	  90.f, // fov
+	  1.f, // aspect ratio
+	  .1f, // near clip
+	  100.f // far clip
+	)));
+
+	// fixed view
+	glMultMatrixf(glm::value_ptr(glm::lookAt(
+	  glm::vec3(.5, .5, .5), // position
+	  glm::vec3(.5, .5, -1), // target xyz
+	  glm::vec3(0, 1, 0) // headVec
+	)));
+
 	unsigned char *chunk0 = new unsigned char[4096];
 	fillChunk(chunk0);
-	Chunk centerChunk(chunk0, 0, 0, 0);
 
 	Controls ctl;
 	bool running = true;
 	while (running)
 	{
+		// TODO feed camera info to shader
 		//ctl.beginFrame(&camera);
-
-		// build MVP matrix
-		glLoadMatrixf(glm::value_ptr(camera.projection()));
-		glMultMatrixf(glm::value_ptr(camera.view()));
 
 		// clear screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		//centerChunk.render(uniformBlockLoc);
 		glBegin(GL_QUADS);
 		glVertex3f(0, 0, 0);
 		glVertex3f(1, 0, 0);
