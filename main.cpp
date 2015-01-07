@@ -1,8 +1,10 @@
 #include "chunk.h"
 #include "controls.h"
 #include "camera.h"
+#include "hud.h"
 #include "shader.h"
 #include "utils.h"
+#include <FTGL/ftgl.h>
 #include <GL/glfw.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -23,6 +25,14 @@ int main(int argc, char **argv)
 {
 	if (initGraphics() != 0)
 		return 1;
+
+	FTGLPixmapFont font("/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf");
+	if (font.Error())
+	{
+		std::cerr << "Error opening font" << std::endl;
+		return 2;
+	}
+	font.FaceSize(12);
 
 	GLuint shaderProgram = makeShaderProgram();
 
@@ -58,8 +68,6 @@ int main(int argc, char **argv)
 	// track key down events until we get around to them
 	glfwEnable(GLFW_STICKY_KEYS);
 
-	glUseProgram(shaderProgram);
-
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, textureId);
 
@@ -89,6 +97,9 @@ int main(int argc, char **argv)
 	fillChunk(chunk0);
 
 	Controls ctl;
+	Hud hud;
+	hud.addStaticLine("Hello world");
+
 	bool running = true;
 	while (running)
 	{
@@ -98,12 +109,18 @@ int main(int argc, char **argv)
 		// clear screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		glUseProgram(shaderProgram);
+
 		glBegin(GL_QUADS);
 		glVertex3f(0, 0, 0);
 		glVertex3f(1, 0, 0);
 		glVertex3f(1, 1, 0);
 		glVertex3f(0, 1, 0);
 		glEnd();
+
+		glUseProgram(0);
+
+		hud.render(font);
 
 		// swap double buffers
 		glfwSwapBuffers();
