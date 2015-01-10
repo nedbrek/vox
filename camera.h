@@ -21,6 +21,8 @@ public:
 	/// set camera position (world space)
 	void setPosition(const glm::vec3 &pos);
 
+	glm::vec3 targetPosition() const;
+
 	/// set camera target position (world space)
 	void setTargetPosition(const glm::vec3 &v);
 

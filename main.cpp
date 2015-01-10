@@ -11,6 +11,11 @@
 #include <iostream>
 #include <memory>
 
+std::ostream& operator<<(std::ostream &os, const glm::vec3 &v)
+{
+	return os << '(' << v[0] << ',' << v[1] << ',' << v[2] << ')';
+}
+
 /// populate a chunk - should probably take a random seed
 void fillChunk(unsigned char *blockIds)
 {
@@ -65,8 +70,6 @@ int main(int argc, char **argv)
 	}
 
 	Camera camera;
-	// track key down events until we get around to them
-	glfwEnable(GLFW_STICKY_KEYS);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, textureId);
@@ -98,13 +101,15 @@ int main(int argc, char **argv)
 
 	Controls ctl;
 	Hud hud;
-	hud.addStaticLine("Hello world");
+	const size_t varFPS = hud.addVarLine("FPS: ", "0");
+	const size_t varPos = hud.addVarLine("Position: ", "-");
+	const size_t varTgt = hud.addVarLine("Target: ", "-");
 
 	bool running = true;
 	while (running)
 	{
 		// TODO feed camera info to shader
-		//ctl.beginFrame(&camera);
+		ctl.beginFrame(&camera);
 
 		// clear screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -119,6 +124,11 @@ int main(int argc, char **argv)
 		glEnd();
 
 		glUseProgram(0);
+
+		// update HUD variables
+		hud.updateVarLine(varFPS, ctl.fps());
+		hud.updateVarLine(varPos, camera.position());
+		hud.updateVarLine(varTgt, camera.targetPosition());
 
 		hud.render(font);
 

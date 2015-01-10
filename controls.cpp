@@ -1,6 +1,7 @@
 #include "controls.h"
 #include "camera.h"
 #include <GL/glfw.h>
+#include <sstream>
 
 namespace
 {
@@ -13,8 +14,25 @@ Controls::Controls()
 : lastTime_(glfwGetTime())
 , windowWidth_(1092)
 , windowHeight_(614)
+, horizontalAngle_(3.14f)
+, verticalAngle_(0)
+, framesSinceLastInterval_(0)
+, fps_(0)
+, lastDX_(0)
+, lastDY_(0)
 {
+	lastInterval_ = lastTime_;
 	glfwDisable(GLFW_MOUSE_CURSOR);
+
+	// track key down events until we get around to them
+	glfwEnable(GLFW_STICKY_KEYS);
+}
+
+std::string Controls::lastMouseDXY() const
+{
+	std::ostringstream os;
+	os << '(' << lastDX_ << ',' << lastDY_ << ')';
+	return os.str();
 }
 
 void Controls::beginFrame(Camera *cp)
@@ -22,29 +40,44 @@ void Controls::beginFrame(Camera *cp)
 	const double curTime = glfwGetTime();
 	const double deltaT = curTime - lastTime_;
 
+	const double deltaInterval = curTime - lastInterval_;
+	if (deltaInterval > 1)
+	{
+		fps_ = framesSinceLastInterval_ / deltaInterval;
+		framesSinceLastInterval_ = 0;
+		lastInterval_ = curTime;
+	}
+
+	++framesSinceLastInterval_;
+
 	// find amount of mouse motion since last frame
 	int mouseX, mouseY;
 	glfwGetMousePos(&mouseX, &mouseY);
+	glfwSetMousePos(windowWidth_/2, windowHeight_/2);
 
 	// compute new orientation
 	const float deltaX = float(windowWidth_/2 - mouseX);
-	const float deltaY = float(windowHeight_/2 - mouseY);
+	float deltaY = float(windowHeight_/2 - mouseY);
+	if (abs(deltaY) <= 1)
+		deltaY = 0;
+	lastDX_ = deltaX;
+	lastDY_ = deltaY;
 
-	const float horizontalAngle = 3.14f + mouseSpeed * deltaX;
-	const float verticalAngle   = mouseSpeed * deltaY;
+	horizontalAngle_ += mouseSpeed * deltaX;
+	verticalAngle_   += mouseSpeed * deltaY;
 
 	// direction : spherical to cartesian coordinate conversion
 	const glm::vec3 direction(
-	  cos(verticalAngle) * sin(horizontalAngle),
-	  sin(verticalAngle),
-	  cos(verticalAngle) * cos(horizontalAngle)
+	  cos(verticalAngle_) * sin(horizontalAngle_),
+	  sin(verticalAngle_),
+	  cos(verticalAngle_) * cos(horizontalAngle_)
 	);
 
 	// Right vector
 	const glm::vec3 right = glm::vec3(
-	  sin(horizontalAngle - 3.14f/2.0f),
+	  sin(horizontalAngle_ - 3.14f/2.0f),
 	  0,
-	  cos(horizontalAngle - 3.14f/2.0f)
+	  cos(horizontalAngle_ - 3.14f/2.0f)
 	);
 
 	// Up vector
