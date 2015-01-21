@@ -36,6 +36,11 @@ glm::vec3 Camera::position() const
 	return glm::vec3(x_, y_, z_);
 }
 
+glm::vec3 Camera::direction() const
+{
+	return glm::vec3(tX_, tY_, tZ_);
+}
+
 void Camera::setPosition(const glm::vec3 &pos)
 {
 	x_ = pos[0];

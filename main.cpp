@@ -69,8 +69,6 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	Camera camera;
-
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, textureId);
 
@@ -99,6 +97,9 @@ int main(int argc, char **argv)
 	unsigned char *chunk0 = new unsigned char[4096];
 	fillChunk(chunk0);
 
+	const GLint uniformCameraDirection = glGetUniformLocation(shaderProgram, "cameraDirection");
+
+	Camera camera;
 	Controls ctl;
 	Hud hud;
 	const size_t varFPS = hud.addVarLine("FPS: ", "0");
@@ -108,13 +109,16 @@ int main(int argc, char **argv)
 	bool running = true;
 	while (running)
 	{
-		// TODO feed camera info to shader
+		// feed camera info to shader
 		ctl.beginFrame(&camera);
+
+		const glm::vec3 cd = camera.direction() - camera.position();
 
 		// clear screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glUseProgram(shaderProgram);
+		glUniform3f(uniformCameraDirection, cd.x, cd.y, cd.z);
 
 		glBegin(GL_QUADS);
 		glVertex3f(0, 0, 0);

@@ -1,6 +1,7 @@
 #version 130
 
 uniform sampler2D tex;
+uniform vec3 cameraDirection;
 
 /*
  * normalization
@@ -33,19 +34,23 @@ bool doesRayHit(ivec2 pixelCoord, vec2 position, vec2 direction)
 	bool yMovement = pixelCoord.y < position.y && direction.y < 0 ||
 	                 pixelCoord.y > position.y && direction.y > 0;
 
-	vec2 sideDist = direction;
+	vec2 ad = abs(direction);
+	vec2 sideDist = ad;
 
-	while (xMovement || yMovement)
+	int steps = 0;
+	while ((xMovement || yMovement) && steps < 512)
 	{
-		if (sideDist.x < sideDist.y)
+		++steps;
+
+		if (sideDist.y < sideDist.x)
 		{
 			position.x += stepX;
-			sideDist.x += direction.x;
+			sideDist.y += ad.y;
 		}
 		else
 		{
 			position.y += stepY;
-			sideDist.y += direction.y;
+			sideDist.x += ad.x;
 		}
 
 		xMovement = pixelCoord.x < position.x && direction.x < 0 ||
@@ -61,8 +66,7 @@ bool doesRayHit(ivec2 pixelCoord, vec2 position, vec2 direction)
 void main()
 {
 	// TODO: adjust for camera
-	// remember to subtact .5, so it's [-.5, .5]
-	vec2 xzDirection = vec2(.3, .5);
+	vec2 xzDirection = vec2(cameraDirection.x, cameraDirection.z);
 
 	// TODO: adjust for camera
 	vec2 xzPosition = vec2(410., 205.);
